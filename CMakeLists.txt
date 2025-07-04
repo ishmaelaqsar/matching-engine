@@ -10,6 +10,15 @@ add_executable(matching_engine main.cpp
         src/book/trade.h
         src/book/level.h
         src/book/shared_counter.h
-        src/server/tcp_server.h
-        src/server/client.h
-        src/server/tcp_connection.h)
+        src/tcp/server.h
+        src/tcp/connection.h
+)
+
+add_executable(tcp_server server.cpp
+        src/tcp/server.h
+        src/tcp/connection.h
+)
+
+add_executable(tcp_client client.cpp
+        src/tcp/client.h
+)
