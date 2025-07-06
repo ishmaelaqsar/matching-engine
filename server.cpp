@@ -8,7 +8,7 @@ int main()
                 server.start_accept();
                 io_context.run();
         } catch (const std::exception &e) {
-                std::cerr << "Exception: " << e.what() << "\n";
+                std::cerr << "Exception: " << e.what() << std::endl;
         }
 
         return 0;

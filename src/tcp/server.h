@@ -25,8 +25,8 @@ namespace orderbook
                 void start_accept();
 
         private:
-                void handle_accept(const std::shared_ptr<TCPConnection> &connection,
-                                   const boost::system::error_code &error_code);
+                void handle_accept(const boost::system::error_code &error_code,
+                                   const std::shared_ptr<TCPConnection> &connection);
 
                 boost::asio::io_context &f_io_context;
                 boost::asio::ip::tcp::acceptor f_acceptor;
@@ -36,16 +36,18 @@ namespace orderbook
         {
                 const auto connection = TCPConnection::create(f_io_context);
                 f_acceptor.async_accept(connection->socket(),
-                                        [this, connection](const boost::system::error_code &ec) {
-                                                handle_accept(connection, ec);
+                                        [this, connection](boost::system::error_code ec) {
+                                                handle_accept(ec, connection);
                                         });
         }
 
-        inline void TCPServer::handle_accept(const std::shared_ptr<TCPConnection> &connection,
-                                             const boost::system::error_code &error_code)
+        inline void TCPServer::handle_accept(const boost::system::error_code &error_code,
+                                             const std::shared_ptr<TCPConnection> &connection)
         {
                 if (!error_code) {
                         connection->open();
+                } else {
+                        std::cerr << error_code.message() << std::endl;
                 }
 
                 start_accept(); // Accept next connection

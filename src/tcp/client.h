@@ -1,8 +1,13 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include <iostream>
 #include <boost/asio.hpp>
 
+#include "protocol/header.h"
+#include "protocol/add_order.h"
+
+// NOT THREAD SAFE
 namespace orderbook
 {
         class TCPClient
@@ -21,13 +26,11 @@ namespace orderbook
 
                 explicit operator bool() const;
 
-                void write(std::string message);
-
-                size_t read(const boost::asio::mutable_buffer &buffer);
-
-                std::string read_string(size_t max_bytes = 1024);
+                AddOrderResponse add_order(const AddOrderRequest &request);
 
         private:
+                AddOrderResponse add_order_response();
+
                 boost::asio::ip::tcp::endpoint f_endpoint;
                 boost::asio::io_context &f_io_context;
                 boost::asio::ip::tcp::socket f_socket;
@@ -49,8 +52,10 @@ namespace orderbook
         {
                 if (f_connected) {
                         boost::system::error_code ec;
-                        f_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-                        f_socket.close(ec);
+                        f_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec); // NOLINT(*-unused-return-value)
+                        if (ec) std::cerr << ec.message() << "\n";
+                        f_socket.close(ec); // NOLINT(*-unused-return-value)
+                        if (ec) std::cerr << ec.message() << "\n";
                         f_connected = false;
                 }
         }
@@ -65,25 +70,36 @@ namespace orderbook
                 return f_connected;
         }
 
-        inline void TCPClient::write(std::string message)
-        {
-                if (!f_connected) throw std::runtime_error("TCPClient not connected");
-                f_socket.send(boost::asio::buffer(message));
-        }
-
-        inline size_t TCPClient::read(const boost::asio::mutable_buffer &buffer)
-        {
-                if (!f_connected) throw std::runtime_error("Not connected");
-                return f_socket.read_some(buffer);
-        }
-
-        inline std::string TCPClient::read_string(const size_t max_bytes)
+        inline AddOrderResponse TCPClient::add_order(const AddOrderRequest &request)
         {
                 if (!f_connected) throw std::runtime_error("Not connected");
 
-                std::vector<char> buffer(max_bytes);
-                size_t len = f_socket.read_some(boost::asio::buffer(buffer));
-                return {buffer.data(), len};
+                char buffer[MessageHeader::SIZE + AddOrderRequest::SIZE];
+                MessageHeader::serialize({MessageType::AddOrderRequest, AddOrderRequest::SIZE}, buffer);
+                AddOrderRequest::serialize(request, buffer + MessageHeader::SIZE);
+
+                f_socket.send(boost::asio::buffer(buffer));
+
+                return add_order_response();
+        }
+
+        inline AddOrderResponse TCPClient::add_order_response()
+        {
+                std::array<char, MessageHeader::SIZE> header_buffer{};
+                f_socket.receive(boost::asio::buffer(header_buffer));
+                auto [type, length] = MessageHeader::deserialize(header_buffer.data());
+
+                if (type != MessageType::AddOrderResponse) {
+                        throw std::runtime_error("Unexpected message type");
+                }
+
+                if (length != AddOrderResponse::SIZE) {
+                        throw std::runtime_error("Invalid response size");
+                }
+
+                char payload_buffer[AddOrderResponse::SIZE];
+                f_socket.receive(boost::asio::buffer(payload_buffer, AddOrderResponse::SIZE));
+                return AddOrderResponse::deserialize(payload_buffer);
         }
 }
 
