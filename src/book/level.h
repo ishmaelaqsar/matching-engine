@@ -28,7 +28,9 @@ namespace orderbook
 
                 Level &operator=(Level &&level) = default;
 
-                explicit operator bool() const;
+                [[nodiscard]] bool empty() const;
+
+                [[nodiscard]] Quantity quantity() const;
 
                 void add_order(const Order &order);
 
@@ -41,14 +43,20 @@ namespace orderbook
                 std::vector<Order> f_orders;
         };
 
-        inline Level::operator bool() const
+        inline bool Level::empty() const
         {
-                return this->f_quantity > 0;
+                return f_quantity == 0;
+        }
+
+        inline Quantity Level::quantity() const
+        {
+                return f_quantity;
         }
 
         inline void Level::add_order(const Order &order)
         {
                 f_orders.emplace_back(order);
+                f_quantity += order.quantity();
         }
 
         inline std::vector<Trade> Level::match_order(Order &order)
@@ -56,22 +64,29 @@ namespace orderbook
                 auto trades = std::vector<Trade>();
                 auto now = std::chrono::system_clock::now().time_since_epoch().count();
 
-                for (auto it = f_orders.begin(); it != f_orders.end() && order.quantity() > 0; ++it) {
+                for (auto it = f_orders.begin(); it != f_orders.end() && order.quantity() > 0;) {
                         if (it->quantity() == order.quantity()) {
-                                trades.emplace_back(++f_id_counter, f_price, it->quantity(), now,
+                                const auto traded_qty = order.quantity();
+                                trades.emplace_back(++f_id_counter, f_price, traded_qty, now,
                                                     order.id(), it->id());
+                                f_quantity -= traded_qty;
                                 order.set_quantity(0);
                                 it = f_orders.erase(it);
                         } else if (it->quantity() < order.quantity()) {
-                                trades.emplace_back(++f_id_counter, f_price, it->quantity(), now,
+                                const auto traded_qty = it->quantity();
+                                trades.emplace_back(++f_id_counter, f_price, traded_qty, now,
                                                     order.id(), it->id());
-                                order.set_quantity(order.quantity() - it->quantity());
+                                f_quantity -= traded_qty;
+                                order.set_quantity(order.quantity() - traded_qty);
                                 it = f_orders.erase(it);
                         } else {
-                                trades.emplace_back(++f_id_counter, f_price, order.quantity(), now,
+                                const auto traded_qty = order.quantity();
+                                trades.emplace_back(++f_id_counter, f_price, traded_qty, now,
                                                     order.id(), it->id());
+                                f_quantity -= traded_qty;
                                 order.set_quantity(0);
-                                it->set_quantity(it->quantity() - order.quantity());
+                                it->set_quantity(it->quantity() - traded_qty);
+                                ++it;
                         }
                 }
 

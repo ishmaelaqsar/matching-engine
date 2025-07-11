@@ -57,6 +57,7 @@ add_executable(matching_engine_test
         test/tcp/protocol_string_test.cpp
         test/tcp/protocol_header_test.cpp
         test/tcp/protocol_add_order_test.cpp
+        test/book/book_level_test.cpp
 )
 target_link_libraries(matching_engine_test
         GTest::gtest_main
