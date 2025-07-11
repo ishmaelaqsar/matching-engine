@@ -37,3 +37,15 @@ FetchContent_Declare(
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+add_executable(matching_engine_test
+        test/tcp/protocol_test.cpp
+)
+target_link_libraries(matching_engine_test
+        GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(matching_engine_test)
