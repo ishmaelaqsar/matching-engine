@@ -1,12 +1,10 @@
 #ifndef ADD_ORDER_H
 #define ADD_ORDER_H
 
-#include "header.h"
+#include "types.h"
 
-namespace orderbook
+namespace tcp
 {
-        constexpr StrLen MAX_SYMBOL_LEN = 8;
-
         struct AddOrderRequest
         {
                 std::string symbol;

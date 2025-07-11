@@ -10,15 +10,15 @@
 
 constexpr unsigned short DEFAULT_PORT = 8080;
 
-namespace orderbook
+namespace tcp
 {
-        class TCPServer
+        class Server
         {
         public:
-                explicit TCPServer(boost::asio::io_context &io_context) :
-                        TCPServer(io_context, DEFAULT_PORT) {}
+                explicit Server(boost::asio::io_context &io_context) :
+                        Server(io_context, DEFAULT_PORT) {}
 
-                TCPServer(boost::asio::io_context &io_context, const unsigned short &port) :
+                Server(boost::asio::io_context &io_context, const unsigned short &port) :
                         f_io_context(io_context),
                         f_acceptor(io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)) {}
 
@@ -26,23 +26,23 @@ namespace orderbook
 
         private:
                 void handle_accept(const boost::system::error_code &error_code,
-                                   const std::shared_ptr<TCPConnection> &connection);
+                                   const std::shared_ptr<Connection> &connection);
 
                 boost::asio::io_context &f_io_context;
                 boost::asio::ip::tcp::acceptor f_acceptor;
         };
 
-        inline void TCPServer::start_accept()
+        inline void Server::start_accept()
         {
-                const auto connection = TCPConnection::create(f_io_context);
+                const auto connection = Connection::create(f_io_context);
                 f_acceptor.async_accept(connection->socket(),
                                         [this, connection](boost::system::error_code ec) {
                                                 handle_accept(ec, connection);
                                         });
         }
 
-        inline void TCPServer::handle_accept(const boost::system::error_code &error_code,
-                                             const std::shared_ptr<TCPConnection> &connection)
+        inline void Server::handle_accept(const boost::system::error_code &error_code,
+                                          const std::shared_ptr<Connection> &connection)
         {
                 if (!error_code) {
                         connection->open();

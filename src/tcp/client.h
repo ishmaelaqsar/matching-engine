@@ -8,12 +8,12 @@
 #include "protocol/add_order.h"
 
 // NOT THREAD SAFE
-namespace orderbook
+namespace tcp
 {
-        class TCPClient
+        class Client
         {
         public:
-                TCPClient(boost::asio::io_context &io_context, const std::string &host, const unsigned short port) :
+                Client(boost::asio::io_context &io_context, const std::string &host, const unsigned short port) :
                         f_endpoint({boost::asio::ip::make_address(host), port}),
                         f_io_context(io_context),
                         f_socket(boost::asio::ip::tcp::socket(io_context)) {}
@@ -37,7 +37,7 @@ namespace orderbook
                 bool f_connected = false;
         };
 
-        inline void TCPClient::connect()
+        inline void Client::connect()
         {
                 try {
                         f_socket.connect(f_endpoint);
@@ -48,7 +48,7 @@ namespace orderbook
                 }
         }
 
-        inline void TCPClient::disconnect()
+        inline void Client::disconnect()
         {
                 if (f_connected) {
                         boost::system::error_code ec;
@@ -60,17 +60,17 @@ namespace orderbook
                 }
         }
 
-        inline bool TCPClient::is_connected() const
+        inline bool Client::is_connected() const
         {
                 return f_connected;
         }
 
-        inline TCPClient::operator bool() const
+        inline Client::operator bool() const
         {
                 return f_connected;
         }
 
-        inline AddOrderResponse TCPClient::add_order(const AddOrderRequest &request)
+        inline AddOrderResponse Client::add_order(const AddOrderRequest &request)
         {
                 if (!f_connected) throw std::runtime_error("Not connected");
 
@@ -83,7 +83,7 @@ namespace orderbook
                 return add_order_response();
         }
 
-        inline AddOrderResponse TCPClient::add_order_response()
+        inline AddOrderResponse Client::add_order_response()
         {
                 std::array<char, MessageHeader::SIZE> header_buffer{};
                 f_socket.receive(boost::asio::buffer(header_buffer));

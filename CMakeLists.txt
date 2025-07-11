@@ -3,6 +3,16 @@ project(matching_engine)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Set default book type to Currency
+set(BOOK_TYPE "Currency" CACHE STRING "Type of book: Currency or Equity")
+
+if(NOT BOOK_TYPE STREQUAL "Currency" AND
+        NOT BOOK_TYPE STREQUAL "Equity")
+    message(FATAL_ERROR "BOOK_TYPE must be either 'Currency' or 'Equity'")
+endif()
+
+add_compile_definitions(BOOK_TYPE=${BOOK_TYPE})
+
 add_executable(matching_engine main.cpp
         src/book/types.h
         src/book/book.h
@@ -14,6 +24,7 @@ add_executable(matching_engine main.cpp
         src/tcp/connection.h
         src/tcp/protocol/header.h
         src/tcp/protocol/add_order.h
+        src/tcp/protocol/types.h
 )
 
 add_executable(tcp_server server.cpp
@@ -21,12 +32,14 @@ add_executable(tcp_server server.cpp
         src/tcp/connection.h
         src/tcp/protocol/header.h
         src/tcp/protocol/add_order.h
+        src/tcp/protocol/types.h
 )
 
 add_executable(tcp_client client.cpp
         src/tcp/client.h
         src/tcp/protocol/header.h
         src/tcp/protocol/add_order.h
+        src/tcp/protocol/types.h
 )
 
 include(FetchContent)
@@ -41,7 +54,9 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(matching_engine_test
-        test/tcp/protocol_test.cpp
+        test/tcp/protocol_string_test.cpp
+        test/tcp/protocol_header_test.cpp
+        test/tcp/protocol_add_order_test.cpp
 )
 target_link_libraries(matching_engine_test
         GTest::gtest_main

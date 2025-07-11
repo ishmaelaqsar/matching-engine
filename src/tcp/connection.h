@@ -1,5 +1,5 @@
-#ifndef TCP_CONNECTION_H
-#define TCP_CONNECTION_H
+#ifndef CONNECTION_H
+#define CONNECTION_H
 
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
@@ -10,26 +10,26 @@
 #include "protocol/header.h"
 #include "protocol/add_order.h"
 
-namespace orderbook
+namespace tcp
 {
-        class TCPConnection : public std::enable_shared_from_this<TCPConnection>
+        class Connection : public std::enable_shared_from_this<Connection>
         {
         public:
-                explicit TCPConnection(boost::asio::io_context &io_context) :
+                explicit Connection(boost::asio::io_context &io_context) :
                         f_socket(io_context) {}
 
-                TCPConnection(const TCPConnection &) = delete;
+                Connection(const Connection &) = delete;
 
-                TCPConnection &operator=(const TCPConnection &) = delete;
+                Connection &operator=(const Connection &) = delete;
 
-                ~TCPConnection()
+                ~Connection()
                 {
                         if (f_socket.is_open()) f_socket.close();
                 }
 
-                static std::shared_ptr<TCPConnection> create(boost::asio::io_context &io_context)
+                static std::shared_ptr<Connection> create(boost::asio::io_context &io_context)
                 {
-                        return std::make_shared<TCPConnection>(io_context);
+                        return std::make_shared<Connection>(io_context);
                 }
 
                 boost::asio::ip::tcp::socket &socket();
@@ -54,12 +54,12 @@ namespace orderbook
                 boost::asio::ip::tcp::socket f_socket;
         };
 
-        inline boost::asio::ip::tcp::socket &TCPConnection::socket()
+        inline boost::asio::ip::tcp::socket &Connection::socket()
         {
                 return f_socket;
         }
 
-        inline void TCPConnection::open()
+        inline void Connection::open()
         {
                 const auto self = shared_from_this();
                 const auto header_buffer = std::make_shared<std::array<char, MessageHeader::SIZE>>();
@@ -73,7 +73,7 @@ namespace orderbook
                 );
         }
 
-        inline void TCPConnection::handle_read(
+        inline void Connection::handle_read(
                 const boost::system::error_code &error_code,
                 const std::shared_ptr<std::array<char, MessageHeader::SIZE>> &header_buffer)
         {
@@ -103,7 +103,7 @@ namespace orderbook
                         });
         }
 
-        inline void TCPConnection::handle_add_order_request(const std::shared_ptr<std::vector<char>> &payload_buffer)
+        inline void Connection::handle_add_order_request(const std::shared_ptr<std::vector<char>> &payload_buffer)
         {
                 auto [symbol, price, quantity, side] = AddOrderRequest::deserialize(payload_buffer->data());
 
@@ -137,4 +137,4 @@ namespace orderbook
         }
 }
 
-#endif // TCP_CONNECTION_H
+#endif // CONNECTION_H
