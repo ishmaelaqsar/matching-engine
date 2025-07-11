@@ -9,10 +9,6 @@ int main()
         boost::asio::io_context io;
         orderbook::TCPClient client(io, "127.0.0.1", 8080);
 
-        uint64_t price;
-        uint64_t quantity;
-        uint8_t side;
-
         try {
                 client.connect();
                 std::string line;
@@ -34,19 +30,25 @@ int main()
 
 orderbook::AddOrderRequest parse_line(std::string &line)
 {
-        const auto price_position = line.find(' ', 0);
-        if (price_position == std::string::npos) {
+        const auto symbol_position = line.find(' ', 0);
+        if (symbol_position == std::string::npos) {
                 throw std::invalid_argument("1: invalid input: " + line);
+        }
+
+        const auto price_position = line.find(' ', symbol_position + 1);
+        if (price_position == std::string::npos) {
+                throw std::invalid_argument("2: invalid input: " + line);
         }
 
         const auto quantity_position = line.find(' ', price_position + 1);
         if (quantity_position == std::string::npos) {
-                throw std::invalid_argument("2: invalid input: " + line);
+                throw std::invalid_argument("3: invalid input: " + line);
         }
 
-        uint64_t price = std::stoull(std::string(&line[0], &line[price_position]));
-        uint64_t quantity = std::stoull(std::string(&line[price_position + 1], &line[quantity_position]));
-        uint8_t raw_side = std::stoull(std::string(&line[quantity_position + 1]));
+        const auto symbol = std::string(&line[0], &line[symbol_position]);
+        const uint64_t price = std::stoull(std::string(&line[symbol_position + 1], &line[price_position]));
+        const uint64_t quantity = std::stoull(std::string(&line[price_position + 1], &line[quantity_position]));
+        const uint8_t raw_side = std::stoull(std::string(&line[quantity_position + 1]));
 
         orderbook::Side side;
         switch (raw_side) {
@@ -57,5 +59,5 @@ orderbook::AddOrderRequest parse_line(std::string &line)
                 default: throw std::invalid_argument("invalid side: " + std::to_string(raw_side));
         }
 
-        return {price, quantity, side};
+        return {symbol, price, quantity, side};
 }

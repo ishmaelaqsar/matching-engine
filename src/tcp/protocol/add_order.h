@@ -5,32 +5,49 @@
 
 namespace orderbook
 {
+        constexpr StrLen MAX_SYMBOL_LEN = 8;
+
         struct AddOrderRequest
         {
+                std::string symbol;
                 uint64_t price;
                 uint64_t quantity;
                 Side side;
 
-                static constexpr size_t SIZE = sizeof(price) + sizeof(quantity) + sizeof(side);
+                static constexpr size_t SIZE = MAX_SYMBOL_LEN + sizeof(price) + sizeof(quantity) + sizeof(side);
 
-                static void serialize(const struct AddOrderRequest request, char *data)
+                static void serialize(const AddOrderRequest &request, char *data)
                 {
+                        auto offset = serialize_string(request.symbol, data, 0, MAX_SYMBOL_LEN);
+
                         const uint64_t p = htobe64(request.price);
                         const uint64_t q = htobe64(request.quantity);
-                        std::memcpy(data, &p, sizeof(p));
-                        std::memcpy(data + 8, &q, sizeof(q));
-                        data[16] = static_cast<uint8_t>(request.side); // NOLINT(*-narrowing-conversions)
+                        std::memcpy(data + offset, &p, sizeof(p));
+                        offset += sizeof(p);
+
+                        std::memcpy(data + offset, &q, sizeof(q));
+                        offset += sizeof(q);
+
+                        data[offset] = static_cast<uint8_t>(request.side); // NOLINT(*-narrowing-conversions)
                 }
 
                 static AddOrderRequest deserialize(const char *data)
                 {
-                        uint64_t p, q;
-                        std::memcpy(&p, data, sizeof(p));
-                        std::memcpy(&q, data + 8, sizeof(q));
+                        size_t offset = 0;
+                        auto symbol = deserialize_string(data, &offset, MAX_SYMBOL_LEN);
+
+                        uint64_t p;
+                        std::memcpy(&p, data + offset, sizeof(p));
+                        offset += sizeof(p);
                         const auto price = be64toh(p);
+
+                        uint64_t q;
+                        std::memcpy(&q, data + offset, sizeof(q));
+                        offset += sizeof(q);
                         const auto quantity = be64toh(q);
-                        const auto side = static_cast<Side>(data[16]);
-                        return {price, quantity, side};
+
+                        const auto side = static_cast<Side>(data[offset]);
+                        return {std::move(symbol), price, quantity, side};
                 }
         };
 
@@ -41,7 +58,7 @@ namespace orderbook
 
                 static constexpr size_t SIZE = sizeof(order_id) + sizeof(timestamp);
 
-                static void serialize(const struct AddOrderResponse response, char *data)
+                static void serialize(const AddOrderResponse response, char *data)
                 {
                         const uint64_t id = htobe64(response.order_id);
                         const uint64_t ts = htobe64(response.timestamp);

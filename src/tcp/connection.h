@@ -6,7 +6,6 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <chrono>
 #include <memory>
-#include <boost/asio/placeholders.hpp>
 
 #include "protocol/header.h"
 #include "protocol/add_order.h"
@@ -26,7 +25,7 @@ namespace orderbook
                 ~TCPConnection()
                 {
                         if (f_socket.is_open()) f_socket.close();
-                };
+                }
 
                 static std::shared_ptr<TCPConnection> create(boost::asio::io_context &io_context)
                 {
@@ -43,7 +42,7 @@ namespace orderbook
 
                 void handle_add_order_request(const std::shared_ptr<std::vector<char>> &payload_buffer);
 
-                void handle_write(const boost::system::error_code &ec, std::size_t bytes_transferred)
+                void handle_write(const boost::system::error_code &ec)
                 {
                         if (ec) {
                                 std::cerr << ec.message() << std::endl;
@@ -68,7 +67,7 @@ namespace orderbook
                 boost::asio::async_read(
                         f_socket,
                         boost::asio::buffer(*header_buffer),
-                        [self, header_buffer](boost::system::error_code ec, size_t) {
+                        [self, header_buffer](const boost::system::error_code ec, size_t) {
                                 self->handle_read(ec, header_buffer);
                         }
                 );
@@ -106,10 +105,11 @@ namespace orderbook
 
         inline void TCPConnection::handle_add_order_request(const std::shared_ptr<std::vector<char>> &payload_buffer)
         {
-                auto [price, quantity, side] = AddOrderRequest::deserialize(payload_buffer->data());
+                auto [symbol, price, quantity, side] = AddOrderRequest::deserialize(payload_buffer->data());
 
                 std::cout << "received order: " <<
-                        "price: " << price <<
+                        "symbol: " << symbol <<
+                        ", price: " << price <<
                         ", quantity: " << quantity <<
                         ", side: " << (side == Side::Buy ? "BUY" : "SELL") <<
                         std::endl;
@@ -130,8 +130,8 @@ namespace orderbook
                 boost::asio::async_write(
                         f_socket,
                         boost::asio::buffer(response_buffer, total_size),
-                        [self](boost::system::error_code ec, size_t bytes) {
-                                self->handle_write(ec, bytes);
+                        [self](const boost::system::error_code ec, size_t) {
+                                self->handle_write(ec);
                         }
                 );
         }
