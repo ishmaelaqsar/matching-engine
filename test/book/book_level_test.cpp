@@ -7,7 +7,7 @@ using namespace orderbook;
 TEST(BookTest, LevelAddOrder)
 {
         const auto counter = SharedCounter<TradeId>();
-        const auto order = Order(1, 123, 456, Side::BUY, 1);
+        const auto order = std::make_shared<Order>(1, 123, 456, Side::BUY, 1);
 
         auto level = Level(123, counter);
 
