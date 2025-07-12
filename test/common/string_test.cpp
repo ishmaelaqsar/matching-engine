@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <climits>
 
-#include "../../src/tcp/protocol/types.h"
+#include "../../src/common/types.h"
 
-using namespace tcp;
+using namespace common;
 
 TEST(SerDeTest, VarString)
 {

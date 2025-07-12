@@ -32,7 +32,7 @@ namespace orderbook
 
                 [[nodiscard]] Quantity quantity() const;
 
-                void add_order(std::shared_ptr<Order> &order);
+                void add_order(const std::shared_ptr<Order> &order);
 
                 std::vector<Trade> match_order(const std::shared_ptr<Order> &order);
 
@@ -53,7 +53,7 @@ namespace orderbook
                 return f_quantity;
         }
 
-        inline void Level::add_order(std::shared_ptr<Order> &order)
+        inline void Level::add_order(const std::shared_ptr<Order> &order)
         {
                 f_orders.emplace_back(order);
                 f_quantity += order->quantity();

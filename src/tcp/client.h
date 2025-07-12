@@ -5,7 +5,7 @@
 #include <boost/asio.hpp>
 
 #include "protocol/header.h"
-#include "protocol/add_order.h"
+#include "../common/add_order.h"
 
 // NOT THREAD SAFE
 namespace tcp

@@ -6,7 +6,7 @@
 
 #include "types.h"
 
-namespace tcp
+namespace common
 {
         struct MessageHeader
         {

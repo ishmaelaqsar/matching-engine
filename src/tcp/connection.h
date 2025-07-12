@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "protocol/header.h"
-#include "protocol/add_order.h"
+#include "../common/add_order.h"
 
 namespace tcp
 {

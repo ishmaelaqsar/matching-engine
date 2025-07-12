@@ -5,13 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Set default book type to Currency
 set(BOOK_TYPE "Currency" CACHE STRING "Type of book: Currency or Equity")
-
 if(NOT BOOK_TYPE STREQUAL "Currency" AND
         NOT BOOK_TYPE STREQUAL "Equity")
     message(FATAL_ERROR "BOOK_TYPE must be either 'Currency' or 'Equity'")
 endif()
-
 add_compile_definitions(BOOK_TYPE=${BOOK_TYPE})
+
+set(RINGBUFFER_CAPACITY 4096)
+add_compile_definitions(RINGBUFFER_CAPACITY=${RINGBUFFER_CAPACITY})
 
 add_executable(matching_engine main.cpp
         src/book/types.h
@@ -22,24 +23,25 @@ add_executable(matching_engine main.cpp
         src/book/shared_counter.h
         src/tcp/server.h
         src/tcp/connection.h
-        src/tcp/protocol/header.h
-        src/tcp/protocol/add_order.h
-        src/tcp/protocol/types.h
+        src/common/header.h
+        src/common/add_order.h
+        src/common/types.h
+        src/engine.h
 )
 
 add_executable(tcp_server server.cpp
         src/tcp/server.h
         src/tcp/connection.h
-        src/tcp/protocol/header.h
-        src/tcp/protocol/add_order.h
-        src/tcp/protocol/types.h
+        src/common/header.h
+        src/common/add_order.h
+        src/common/types.h
 )
 
 add_executable(tcp_client client.cpp
         src/tcp/client.h
-        src/tcp/protocol/header.h
-        src/tcp/protocol/add_order.h
-        src/tcp/protocol/types.h
+        src/common/header.h
+        src/common/add_order.h
+        src/common/types.h
 )
 
 include(FetchContent)
@@ -54,9 +56,9 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(matching_engine_test
-        test/tcp/protocol_string_test.cpp
-        test/tcp/protocol_header_test.cpp
-        test/tcp/protocol_add_order_test.cpp
+        test/common/string_test.cpp
+        test/common/header_test.cpp
+        test/common/add_order_test.cpp
         test/book/book_level_test.cpp
 )
 target_link_libraries(matching_engine_test

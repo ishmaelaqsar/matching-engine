@@ -4,7 +4,7 @@
 #include <cstring>
 #include <netinet/in.h>
 
-namespace tcp
+namespace common
 {
         using StrLen = uint16_t;
 

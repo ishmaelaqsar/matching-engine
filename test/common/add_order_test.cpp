@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "../../src/tcp/protocol/add_order.h"
-#include "../../src/tcp/protocol/header.h"
+#include "../../src/common/add_order.h"
+#include "../../src/common/header.h"
 
-using namespace tcp;
+using namespace common;
 
 TEST(SerDeTest, AddOrderRequest)
 {

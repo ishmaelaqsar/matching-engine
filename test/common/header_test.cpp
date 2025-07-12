@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "../../src/tcp/protocol/header.h"
+#include "../../src/common/header.h"
 
-using namespace tcp;
+using namespace common;
 
 TEST(SerDeTest, HeaderAddOrderRequest)
 {
