@@ -1,13 +1,14 @@
-#include "src/tcp/client.h"
-
 #include <iostream>
 
-orderbook::AddOrderRequest parse_line(std::string &line);
+#include "src/common/add_order.h"
+#include "src/tcp/client.h"
+
+common::AddOrderRequest parse_line(std::string &line);
 
 int main()
 {
         boost::asio::io_context io;
-        orderbook::TCPClient client(io, "127.0.0.1", 8080);
+        tcp::Client client(io, "127.0.0.1", 8080);
 
         try {
                 client.connect();
@@ -28,7 +29,7 @@ int main()
         }
 }
 
-orderbook::AddOrderRequest parse_line(std::string &line)
+common::AddOrderRequest parse_line(std::string &line)
 {
         const auto symbol_position = line.find(' ', 0);
         if (symbol_position == std::string::npos) {
@@ -50,11 +51,11 @@ orderbook::AddOrderRequest parse_line(std::string &line)
         const uint64_t quantity = std::stoull(std::string(&line[price_position + 1], &line[quantity_position]));
         const uint8_t raw_side = std::stoull(std::string(&line[quantity_position + 1]));
 
-        orderbook::Side side;
+        common::Side side;
         switch (raw_side) {
-                case 1: side = orderbook::Side::Buy;
+                case 1: side = common::Side::Buy;
                         break;
-                case 2: side = orderbook::Side::Sell;
+                case 2: side = common::Side::Sell;
                         break;
                 default: throw std::invalid_argument("invalid side: " + std::to_string(raw_side));
         }

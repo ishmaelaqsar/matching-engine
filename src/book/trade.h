@@ -2,15 +2,15 @@
 #define TRADE_H
 
 #include "order.h"
-#include "types.h"
+#include "../common/types.h"
 
 namespace orderbook
 {
         class Trade
         {
         public:
-                Trade(const TradeId id, const Price price, const Quantity quantity, const Timestamp timestamp,
-                      const OrderId source_order, const OrderId matched_order) :
+                Trade(const common::TradeId id, const common::Price price, const common::Quantity quantity, const common::Timestamp timestamp,
+                      const common::OrderId source_order, const common::OrderId matched_order) :
                         f_id(id),
                         f_price(price),
                         f_quantity(quantity),
@@ -32,43 +32,43 @@ namespace orderbook
 
                 bool operator!=(const Trade &trade) const;
 
-                [[nodiscard]] TradeId id() const
+                [[nodiscard]] common::TradeId id() const
                 {
                         return f_id;
                 }
 
-                [[nodiscard]] Price price() const
+                [[nodiscard]] common::Price price() const
                 {
                         return f_price;
                 }
 
-                [[nodiscard]] Quantity quantity() const
+                [[nodiscard]] common::Quantity quantity() const
                 {
                         return f_quantity;
                 }
 
-                [[nodiscard]] Timestamp timestamp() const
+                [[nodiscard]] common::Timestamp timestamp() const
                 {
                         return f_timestamp;
                 }
 
-                [[nodiscard]] OrderId source_order() const
+                [[nodiscard]] common::OrderId source_order() const
                 {
                         return f_source_order;
                 }
 
-                [[nodiscard]] OrderId matched_order() const
+                [[nodiscard]] common::OrderId matched_order() const
                 {
                         return f_matched_order;
                 }
 
         private:
-                TradeId f_id;
-                Price f_price;
-                Quantity f_quantity;
-                Timestamp f_timestamp;
-                OrderId f_source_order;
-                OrderId f_matched_order;
+                common::TradeId f_id;
+                common::Price f_price;
+                common::Quantity f_quantity;
+                common::Timestamp f_timestamp;
+                common::OrderId f_source_order;
+                common::OrderId f_matched_order;
         };
 
         inline bool Trade::operator==(const Trade &trade) const
@@ -87,7 +87,7 @@ struct std::hash<orderbook::Trade>
 {
         std::size_t operator()(const orderbook::Trade &trade) const noexcept
         {
-                return std::hash<orderbook::TradeId>()(trade.id());
+                return std::hash<common::TradeId>()(trade.id());
         }
 };
 

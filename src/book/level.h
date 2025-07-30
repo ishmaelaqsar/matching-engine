@@ -1,20 +1,20 @@
 #ifndef LEVEL_H
 #define LEVEL_H
+
 #include <chrono>
 #include <vector>
 
 #include "order.h"
 #include "trade.h"
-#include "types.h"
-
 #include "shared_counter.h"
+#include "../common/types.h"
 
 namespace orderbook
 {
         class Level
         {
         public:
-                Level(const Price price, const SharedCounter<TradeId> &id_counter) :
+                Level(const common::Price price, const SharedCounter<common::TradeId> &id_counter) :
                         f_price(price),
                         f_id_counter(id_counter) {}
 
@@ -30,16 +30,16 @@ namespace orderbook
 
                 [[nodiscard]] bool empty() const;
 
-                [[nodiscard]] Quantity quantity() const;
+                [[nodiscard]] common::Quantity quantity() const;
 
                 void add_order(const std::shared_ptr<Order> &order);
 
                 std::vector<Trade> match_order(const std::shared_ptr<Order> &order);
 
         private:
-                Price f_price;
-                SharedCounter<TradeId> f_id_counter;
-                Quantity f_quantity = 0;
+                common::Price f_price;
+                SharedCounter<common::TradeId> f_id_counter;
+                common::Quantity f_quantity = 0;
                 std::vector<std::shared_ptr<Order>> f_orders;
         };
 
@@ -48,7 +48,7 @@ namespace orderbook
                 return f_quantity == 0;
         }
 
-        inline Quantity Level::quantity() const
+        inline common::Quantity Level::quantity() const
         {
                 return f_quantity;
         }
@@ -90,7 +90,7 @@ namespace orderbook
                         }
                 }
 
-                return trades;
+                return std::move(trades);
         }
 }
 

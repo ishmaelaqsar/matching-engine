@@ -8,7 +8,7 @@
 
 #include "connection.h"
 
-constexpr unsigned short DEFAULT_PORT = 8080;
+constexpr unsigned short DefaultPort = 8080;
 
 namespace tcp
 {
@@ -16,7 +16,7 @@ namespace tcp
         {
         public:
                 explicit Server(boost::asio::io_context &io_context) :
-                        Server(io_context, DEFAULT_PORT) {}
+                        Server(io_context, DefaultPort) {}
 
                 Server(boost::asio::io_context &io_context, const unsigned short &port) :
                         f_io_context(io_context),

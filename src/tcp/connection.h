@@ -7,7 +7,8 @@
 #include <chrono>
 #include <memory>
 
-#include "protocol/header.h"
+#include "../common/types.h"
+#include "header.h"
 #include "../common/add_order.h"
 
 namespace tcp
@@ -38,7 +39,7 @@ namespace tcp
 
         private:
                 void handle_read(const boost::system::error_code &error_code,
-                                 const std::shared_ptr<std::array<char, MessageHeader::SIZE>> &header_buffer);
+                                 const std::shared_ptr<std::array<char, common::MessageHeader::Size>> &header_buffer);
 
                 void handle_add_order_request(const std::shared_ptr<std::vector<char>> &payload_buffer);
 
@@ -62,7 +63,7 @@ namespace tcp
         inline void Connection::open()
         {
                 const auto self = shared_from_this();
-                const auto header_buffer = std::make_shared<std::array<char, MessageHeader::SIZE>>();
+                const auto header_buffer = std::make_shared<std::array<char, common::MessageHeader::Size>>();
 
                 boost::asio::async_read(
                         f_socket,
@@ -75,14 +76,14 @@ namespace tcp
 
         inline void Connection::handle_read(
                 const boost::system::error_code &error_code,
-                const std::shared_ptr<std::array<char, MessageHeader::SIZE>> &header_buffer)
+                const std::shared_ptr<std::array<char, common::MessageHeader::Size>> &header_buffer)
         {
                 if (error_code) {
                         std::cerr << "Read error: " << error_code.message() << std::endl;
                         return;
                 }
 
-                auto [type, length] = MessageHeader::deserialize(header_buffer->data());
+                auto [type, length] = common::MessageHeader::deserialize(header_buffer->data());
 
                 const auto self = shared_from_this();
                 auto payload_buffer = std::make_shared<std::vector<char>>(length);
@@ -96,7 +97,7 @@ namespace tcp
                                         return;
                                 }
 
-                                if (type == MessageType::AddOrderRequest) {
+                                if (type == common::MessageType::AddOrderRequest) {
                                         self->handle_add_order_request(payload_buffer);
                                 }
                                 // You could dispatch other message types here
@@ -105,27 +106,28 @@ namespace tcp
 
         inline void Connection::handle_add_order_request(const std::shared_ptr<std::vector<char>> &payload_buffer)
         {
-                auto [symbol, price, quantity, side] = AddOrderRequest::deserialize(payload_buffer->data());
+                auto [symbol, price, quantity, side] = common::AddOrderRequest::deserialize(payload_buffer->data());
 
                 std::cout << "received order: " <<
                         "symbol: " << symbol <<
                         ", price: " << price <<
                         ", quantity: " << quantity <<
-                        ", side: " << (side == Side::Buy ? "BUY" : "SELL") <<
+                        ", side: " << (side == common::Side::Buy ? "BUY" : "SELL") <<
                         std::endl;
 
-                constexpr size_t total_size = MessageHeader::SIZE + AddOrderResponse::SIZE;
+                constexpr size_t total_size = common::MessageHeader::Size + common::AddOrderResponse::Size;
                 char response_buffer[total_size];
 
-                MessageHeader::serialize({MessageType::AddOrderResponse, AddOrderResponse::SIZE}, response_buffer);
+                common::MessageHeader::serialize(
+                        {common::MessageType::AddOrderResponse, common::AddOrderResponse::Size}, response_buffer);
 
-                const AddOrderResponse response{
+                const common::AddOrderResponse response{
                         12345,
                         static_cast<uint64_t>(std::chrono::system_clock::now().time_since_epoch().count())
                 };
 
                 const auto self = shared_from_this();
-                AddOrderResponse::serialize(response, response_buffer + MessageHeader::SIZE);
+                common::AddOrderResponse::serialize(response, response_buffer + common::MessageHeader::Size);
 
                 boost::asio::async_write(
                         f_socket,

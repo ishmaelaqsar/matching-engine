@@ -4,7 +4,7 @@
 #include <cstring>
 #include <netinet/in.h>
 
-#include "types.h"
+#include "../common/types.h"
 
 namespace common
 {
@@ -13,7 +13,7 @@ namespace common
                 MessageType type;
                 uint32_t length; // payload size (excluding header)
 
-                static constexpr size_t SIZE = sizeof(type) + sizeof(length);
+                static constexpr size_t Size = sizeof(type) + sizeof(length);
 
                 static void serialize(const MessageHeader message_header, char *data)
                 {

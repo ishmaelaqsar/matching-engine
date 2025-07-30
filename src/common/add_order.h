@@ -1,22 +1,27 @@
 #ifndef ADD_ORDER_H
 #define ADD_ORDER_H
 
+#include <cstring>
+
+#include "util.h"
 #include "types.h"
 
 namespace common
 {
         struct AddOrderRequest
         {
-                std::string symbol;
+                Symbol symbol;
                 uint64_t price;
                 uint64_t quantity;
                 Side side;
 
-                static constexpr size_t SIZE = MAX_SYMBOL_LEN + sizeof(price) + sizeof(quantity) + sizeof(side);
+                static constexpr size_t Size = SymbolLength + sizeof(price) + sizeof(quantity) + sizeof(side);
 
                 static void serialize(const AddOrderRequest &request, char *data)
                 {
-                        auto offset = serialize_string(request.symbol, data, 0, MAX_SYMBOL_LEN);
+                        size_t offset = 0;
+                        std::memcpy(data + offset, request.symbol.data(), SymbolLength);
+                        offset += SymbolLength;
 
                         const uint64_t p = htobe64(request.price);
                         const uint64_t q = htobe64(request.quantity);
@@ -32,7 +37,9 @@ namespace common
                 static AddOrderRequest deserialize(const char *data)
                 {
                         size_t offset = 0;
-                        auto symbol = deserialize_string(data, &offset, MAX_SYMBOL_LEN);
+                        Symbol symbol{};
+                        std::memcpy(symbol.data(), data + offset, SymbolLength);
+                        offset += SymbolLength;
 
                         uint64_t p;
                         std::memcpy(&p, data + offset, sizeof(p));
@@ -45,7 +52,7 @@ namespace common
                         const auto quantity = be64toh(q);
 
                         const auto side = static_cast<Side>(data[offset]);
-                        return {std::move(symbol), price, quantity, side};
+                        return {symbol, price, quantity, side};
                 }
         };
 
@@ -54,7 +61,7 @@ namespace common
                 uint64_t order_id;
                 uint64_t timestamp;
 
-                static constexpr size_t SIZE = sizeof(order_id) + sizeof(timestamp);
+                static constexpr size_t Size = sizeof(order_id) + sizeof(timestamp);
 
                 static void serialize(const AddOrderResponse response, char *data)
                 {

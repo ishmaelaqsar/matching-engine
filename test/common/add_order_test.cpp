@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 
+#define SYMBOL_LEN 7
+
 #include "../../src/common/add_order.h"
-#include "../../src/common/header.h"
+#include "../../src/tcp/header.h"
 
 using namespace common;
 
@@ -12,7 +14,7 @@ TEST(SerDeTest, AddOrderRequest)
         constexpr auto expected_quantity = 123456;
         constexpr auto expected_side = Side::Buy;
 
-        char buffer[AddOrderRequest::SIZE];
+        char buffer[AddOrderRequest::Size];
         AddOrderRequest::serialize({expected_symbol, expected_price, expected_quantity, expected_side}, buffer);
 
         const auto [symbol, price, quantity, side] = AddOrderRequest::deserialize(buffer);
@@ -28,7 +30,7 @@ TEST(SerDeTest, AddOrderResponse)
         constexpr auto expected_order_id = 1;
         constexpr auto expected_timestamp = 122333444555;
 
-        char buffer[AddOrderResponse::SIZE];
+        char buffer[AddOrderResponse::Size];
         AddOrderResponse::serialize({expected_order_id, expected_timestamp}, buffer);
 
         const auto [order_id, timestamp] = AddOrderResponse::deserialize(buffer);

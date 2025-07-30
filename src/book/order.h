@@ -3,15 +3,16 @@
 
 #include <functional>
 
-#include "types.h"
+#include "../common/types.h"
 
 namespace orderbook
 {
         class Order
         {
         public:
-                Order(const OrderId id, const Price price, const Quantity quantity, const Side side,
-                      const Timestamp timestamp) :
+                Order(const common::OrderId id, const common::Price price, const common::Quantity quantity,
+                      const common::Side side,
+                      const common::Timestamp timestamp) :
                         f_id(id),
                         f_price(price),
                         f_quantity(quantity),
@@ -32,47 +33,47 @@ namespace orderbook
 
                 bool operator!=(const Order &order) const;
 
-                [[nodiscard]] OrderId id() const
+                [[nodiscard]] common::OrderId id() const
                 {
                         return f_id;
                 }
 
-                [[nodiscard]] Price price() const
+                [[nodiscard]] common::Price price() const
                 {
                         return f_price;
                 }
 
-                [[nodiscard]] Quantity quantity() const
+                [[nodiscard]] common::Quantity quantity() const
                 {
                         return f_quantity;
                 }
 
-                [[nodiscard]] Side side() const
+                [[nodiscard]] common::Side side() const
                 {
                         return f_side;
                 }
 
-                [[nodiscard]] Timestamp timestamp() const
+                [[nodiscard]] common::Timestamp timestamp() const
                 {
                         return f_timestamp;
                 }
 
-                void set_price(const Price price)
+                void set_price(const common::Price price)
                 {
                         this->f_price = price;
                 }
 
-                void set_quantity(const Quantity quantity)
+                void set_quantity(const common::Quantity quantity)
                 {
                         this->f_quantity = quantity;
                 }
 
         private:
-                OrderId f_id;
-                Price f_price;
-                Quantity f_quantity;
-                Side f_side;
-                Timestamp f_timestamp;
+                common::OrderId f_id;
+                common::Price f_price;
+                common::Quantity f_quantity;
+                common::Side f_side;
+                common::Timestamp f_timestamp;
         };
 
         inline bool Order::operator==(const Order &order) const
@@ -91,7 +92,7 @@ struct std::hash<orderbook::Order>
 {
         std::size_t operator()(const orderbook::Order &order) const noexcept
         {
-                return std::hash<orderbook::OrderId>()(order.id());
+                return std::hash<common::OrderId>()(order.id());
         }
 };
 
