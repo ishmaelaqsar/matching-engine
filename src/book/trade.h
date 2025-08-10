@@ -1,22 +1,24 @@
 #ifndef TRADE_H
 #define TRADE_H
 
-#include "order.h"
 #include "../common/types.h"
+#include "order.h"
 
 namespace orderbook
 {
         class Trade
         {
         public:
-                Trade(const common::TradeId id, const common::Price price, const common::Quantity quantity, const common::Timestamp timestamp,
-                      const common::OrderId source_order, const common::OrderId matched_order) :
-                        f_id(id),
-                        f_price(price),
-                        f_quantity(quantity),
-                        f_timestamp(timestamp),
-                        f_source_order(source_order),
-                        f_matched_order(matched_order) {}
+                Trade(const common::TradeId id, const common::Price price, const common::Quantity quantity,
+                      const common::Timestamp timestamp, const common::OrderId source_order,
+                      const common::OrderId matched_order) :
+                    f_id(id),
+                    f_price(price),
+                    f_quantity(quantity),
+                    f_timestamp(timestamp),
+                    f_source_order(source_order),
+                    f_matched_order(matched_order)
+                {}
 
                 Trade(const Trade &trade) = default;
 
@@ -31,6 +33,8 @@ namespace orderbook
                 bool operator==(const Trade &trade) const;
 
                 bool operator!=(const Trade &trade) const;
+
+                friend std::ostream &operator<<(std::ostream &os, const Trade &trade);
 
                 [[nodiscard]] common::TradeId id() const
                 {
@@ -80,7 +84,20 @@ namespace orderbook
         {
                 return !(*this == trade);
         }
-}
+
+        inline std::ostream &operator<<(std::ostream &os, const Trade &trade)
+        {
+                os << "Trade{";
+                os << "id: " << trade.f_id << ", ";
+                os << "price: " << trade.f_price << ", ";
+                os << "quantity: " << trade.f_quantity << ", ";
+                os << "timestamp: " << trade.f_timestamp << ", ";
+                os << "source_order: " << trade.f_source_order << ", ";
+                os << "matched_order: " << trade.f_matched_order;
+                os << "}";
+                return os;
+        }
+} // namespace orderbook
 
 template<>
 struct std::hash<orderbook::Trade>
@@ -91,4 +108,4 @@ struct std::hash<orderbook::Trade>
         }
 };
 
-#endif //TRADE_H
+#endif // TRADE_H

@@ -17,6 +17,15 @@ namespace common
 
         enum class Side : uint8_t { Buy = 0, Sell = 1 };
 
+        inline std::ostream& operator<<(std::ostream& os, const Side& side)
+        {
+                switch (side) {
+                        case Side::Buy: return os << "Buy";
+                        case Side::Sell: return os << "Sell";
+                }
+                return os;
+        }
+
         enum class MessageType : uint8_t { AddOrderRequest = 1, AddOrderResponse = 2 };
 
         #ifndef SYMBOL_LEN

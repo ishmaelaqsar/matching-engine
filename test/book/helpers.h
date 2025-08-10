@@ -12,4 +12,13 @@ inline std::shared_ptr<Order> create_order(OrderId order_id, Price price, Quanti
         return std::make_shared<Order>(order_id, price, quantity, side, timestamp);
 }
 
+template <typename T>
+void pretty_print(std::vector<T> v)
+{
+        for (auto it = v.begin(); it != v.end(); ++it) {
+                std::cout << *it << ", ";
+        }
+        std::cout << std::endl;
+}
+
 #endif //HELPERS_H

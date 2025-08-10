@@ -56,8 +56,8 @@ add_executable(matching_engine_test
         test/tcp/header_test.cpp
         test/common/string_test.cpp
         test/common/add_order_test.cpp
-        test/book/book_level_test.cpp
-        test/book/book_book_test.cpp
+        test/book/level_test.cpp
+        test/book/book_test.cpp
         test/book/helpers.h
 )
 target_link_libraries(matching_engine_test

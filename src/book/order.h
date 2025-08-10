@@ -33,6 +33,8 @@ namespace orderbook
 
                 bool operator!=(const Order &order) const;
 
+                friend std::ostream &operator<<(std::ostream &os, const Order &order);
+
                 [[nodiscard]] common::OrderId id() const
                 {
                         return f_id;
@@ -84,6 +86,18 @@ namespace orderbook
         inline bool Order::operator!=(const Order &order) const
         {
                 return !(*this == order);
+        }
+
+        inline std::ostream &operator<<(std::ostream &os, const Order &order)
+        {
+                os << "Order{";
+                os << "id: " << order.f_id << ", ";
+                os << "price: " << order.f_price << ", ";
+                os << "quantity: " << order.f_quantity << ", ";
+                os << "side: " << order.f_side << ", ";
+                os << "timestamp: " << order.f_timestamp;
+                os << "}";
+                return os;
         }
 }
 
