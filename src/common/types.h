@@ -1,6 +1,9 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <iostream>
+#include <string>
+
 namespace common
 {
         using Symbol = std::string;

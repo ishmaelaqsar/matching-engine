@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "../../../../src/common/protocol/trading/add_order.h"
-#include "../../../../src/tcp/header.h"
 
 using namespace common;
 using namespace protocol::trading;

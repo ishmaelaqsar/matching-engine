@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "../../types.h"
-#include "../../util.h"
 
 namespace common::protocol::view
 {
@@ -71,7 +70,7 @@ namespace common::protocol::view
         class GetBookResponse
         {
         public:
-                static void serialize(const GetBookResponse response, char *data)
+                static void serialize(const GetBookResponse &response, char *data)
                 {
                         size_t offset = 0;
                         const uint8_t num_bids = response.f_bids.size();

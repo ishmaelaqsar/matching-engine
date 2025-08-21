@@ -2,10 +2,10 @@
 #define ADD_ORDER_H
 
 #include <cstring>
+#include <iostream>
 #include <utility>
 
 #include "../../types.h"
-#include "../../util.h"
 
 namespace common::protocol::trading
 {

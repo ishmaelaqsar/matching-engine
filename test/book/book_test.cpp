@@ -6,7 +6,7 @@
 using namespace orderbook;
 using namespace common;
 
-TEST(BookTest, BookBuyTrades)
+TEST(BookTest, BookTrades)
 {
         auto book = Book();
 
