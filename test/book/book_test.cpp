@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "helpers.h"
 #include "../../src/book/book.h"
 #include "../../src/common/types.h"
 

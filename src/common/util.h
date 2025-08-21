@@ -30,7 +30,7 @@ namespace common
                 *offset += sizeof(len);
                 const auto length = ntohs(len);
 
-                const auto string = std::string(src + *offset, length);
+                auto string = std::string(src + *offset, length);
                 *offset += length;
                 return string;
         }

@@ -4,6 +4,7 @@
 #include <memory>
 #include <type_traits>
 
+// NOT THREAD SAFE
 template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
 class SharedCounter
 {

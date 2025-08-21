@@ -1,6 +1,7 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
+#include <boost/log/trivial.hpp>
 #include <chrono>
 #include <vector>
 
@@ -78,6 +79,8 @@ namespace orderbook
 
                 for (auto it = f_orders.begin(); it != f_orders.end() && order->quantity() > 0;) {
                         if (Order *target_order = it->get(); target_order->quantity() == order->quantity()) {
+                                BOOST_LOG_TRIVIAL(debug) << "Level::match_order << Both orders filled: " << order->id()
+                                                         << " == " << target_order->id();
                                 const auto traded_qty = order->quantity();
                                 trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
                                                     target_order->id());
@@ -85,6 +88,8 @@ namespace orderbook
                                 order->set_quantity(0);
                                 it = f_orders.erase(it);
                         } else if (target_order->quantity() < order->quantity()) {
+                                BOOST_LOG_TRIVIAL(debug) << "Level::match_order << Level order filled: " << order->id()
+                                                         << " > " << target_order->id();
                                 const auto traded_qty = target_order->quantity();
                                 trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
                                                     target_order->id());
@@ -92,6 +97,9 @@ namespace orderbook
                                 order->set_quantity(order->quantity() - traded_qty);
                                 it = f_orders.erase(it);
                         } else {
+                                BOOST_LOG_TRIVIAL(debug)
+                                        << "Level::match_order << Incoming order filled: " << order->id() << " < "
+                                        << target_order->id();
                                 const auto traded_qty = order->quantity();
                                 trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
                                                     target_order->id());
@@ -102,7 +110,7 @@ namespace orderbook
                         }
                 }
 
-                return std::move(trades);
+                return trades;
         }
 } // namespace orderbook
 

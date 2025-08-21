@@ -4,8 +4,8 @@
 #include <iostream>
 #include <boost/asio.hpp>
 
+#include "../common/protocol/trading/add_order.h"
 #include "header.h"
-#include "../common/add_order.h"
 
 namespace tcp
 {

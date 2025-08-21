@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "helpers.h"
-#include "../../src/common/types.h"
 #include "../../src/book/level.h"
+#include "../../src/common/types.h"
+#include "../helpers.h"
 
 using namespace orderbook;
 using namespace common;

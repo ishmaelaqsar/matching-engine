@@ -1,9 +1,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <boost/lockfree/spsc_queue.hpp>
-#include <boost/lockfree/policies.hpp>
-
 namespace common
 {
         using Symbol = std::string;
@@ -15,31 +12,49 @@ namespace common
         using Quantity = uint64_t;
         using StrLen = uint16_t;
 
-        enum class Side : uint8_t { Buy = 0, Sell = 1 };
+        enum class Side : uint8_t
+        {
+                Unknown = 0,
+                Buy = 1,
+                Sell = 2,
+        };
 
-        inline std::ostream& operator<<(std::ostream& os, const Side& side)
+        inline std::ostream &operator<<(std::ostream &os, const Side &side)
         {
                 switch (side) {
+                        case Side::Unknown: return os << "Unknown";
                         case Side::Buy: return os << "Buy";
                         case Side::Sell: return os << "Sell";
                 }
                 return os;
         }
 
-        enum class MessageType : uint8_t { AddOrderRequest = 1, AddOrderResponse = 2 };
+        enum class MessageType : uint8_t
+        {
+                AddOrderRequest = 1,
+                AddOrderResponse = 2,
+                ModifyOrderRequest = 3,
+                ModifyOrderResponse = 4,
+                CancelOrderRequest = 5,
+                CancelOrderResponse = 6,
+                GetBookRequest = 7,
+                GetBookResponse = 8,
+        };
 
-        #ifndef SYMBOL_LEN
-        #error "SYMBOL_LEN must be defined at compile time"
-        #endif
-        constexpr StrLen SymbolLength = SYMBOL_LEN;
-        #undef SYMBOL_LEN
+        inline std::ostream &operator<<(std::ostream &os, const MessageType &type)
+        {
+                switch (type) {
+                        case MessageType::AddOrderRequest: return os << "AddOrderRequest";
+                        case MessageType::AddOrderResponse: return os << "AddOrderResponse";
+                        case MessageType::ModifyOrderRequest: return os << "ModifyOrderRequest";
+                        case MessageType::ModifyOrderResponse: return os << "ModifyOrderResponse";
+                        case MessageType::CancelOrderRequest: return os << "CancelOrderRequest";
+                        case MessageType::CancelOrderResponse: return os << "CancelOrderResponse";
+                        case MessageType::GetBookRequest: return os << "GetBookRequest";
+                        case MessageType::GetBookResponse: return os << "GetBookResponse";
+                }
+                return os;
+        }
+} // namespace common
 
-        #ifndef RINGBUFFER_CAPACITY
-        #define RINGBUFFER_CAPACITY 1024
-        #endif
-        template<typename T>
-        using RingBuffer = boost::lockfree::spsc_queue<T, boost::lockfree::capacity<RINGBUFFER_CAPACITY>>;
-        #undef RINGBUFFER_CAPACITY
-}
-
-#endif //TYPES_H
+#endif // TYPES_H

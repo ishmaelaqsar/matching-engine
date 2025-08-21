@@ -1,6 +1,7 @@
 #ifndef BOOK_H
 #define BOOK_H
 
+#include <boost/log/trivial.hpp>
 #include <iterator>
 #include <map>
 #include <unordered_map>
@@ -17,15 +18,10 @@ namespace orderbook
         {
         public:
                 Book() = default;
-
                 Book(const Book &book) = default;
-
                 Book(Book &&book) = default;
-
                 Book &operator=(const Book &book) = default;
-
                 Book &operator=(Book &&book) = default;
-
                 ~Book() = default;
 
                 std::vector<Trade> add_order(const common::Price &price, const common::Quantity &quantity,
@@ -67,6 +63,7 @@ namespace orderbook
 
         inline std::vector<Trade> Book::add_order(const std::shared_ptr<Order> &order)
         {
+                BOOST_LOG_TRIVIAL(info) << "Book::add_order << " << (*order);
                 std::vector<Trade> trades =
                         order->side() == common::Side::Buy
                                 ? match(order, f_bids, f_asks,
@@ -96,7 +93,7 @@ namespace orderbook
                                 break;
                         }
                         auto &level = it->second;
-                        std::cout << "Order: " << (*order) << ", Level: " << (*level) << std::endl;
+                        BOOST_LOG_TRIVIAL(info) << "Book::match << " << (*order) << " <-> " << (*level);
                         const auto level_trades = level->match_order(order);
                         trades.insert(trades.end(), std::make_move_iterator(level_trades.begin()),
                                       std::make_move_iterator(level_trades.end()));
@@ -114,6 +111,8 @@ namespace orderbook
                         level->add_order(order);
                         f_orders[order->id()] = order;
                 }
+
+                BOOST_LOG_TRIVIAL(info) << "Book::match << Trades: " << trades.size();
 
                 return trades;
         }

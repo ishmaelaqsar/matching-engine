@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "src/common/add_order.h"
+#include "src/common/protocol/trading/add_order.h"
 #include "src/tcp/client.h"
 
 common::AddOrderRequest parse_line(std::string &line);

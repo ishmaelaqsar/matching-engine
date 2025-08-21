@@ -3,6 +3,7 @@
 #include "../../src/tcp/header.h"
 
 using namespace common;
+using namespace tcp;
 
 TEST(SerDeTest, HeaderAddOrderRequest)
 {
