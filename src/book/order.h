@@ -11,13 +11,9 @@ namespace orderbook
         {
         public:
                 Order(const common::OrderId id, const common::Price price, const common::Quantity quantity,
-                      const common::Side side,
-                      const common::Timestamp timestamp) :
-                        f_id(id),
-                        f_price(price),
-                        f_quantity(quantity),
-                        f_side(side),
-                        f_timestamp(timestamp) {}
+                      const common::Side side, const common::Timestamp timestamp) :
+                    f_id(id), f_price(price), f_quantity(quantity), f_side(side), f_timestamp(timestamp)
+                {}
 
                 Order(const Order &order) = default;
 
@@ -29,11 +25,27 @@ namespace orderbook
 
                 ~Order() = default;
 
-                bool operator==(const Order &order) const;
+                bool operator==(const Order &order) const
+                {
+                        return this->f_id == order.f_id;
+                }
 
-                bool operator!=(const Order &order) const;
+                bool operator!=(const Order &order) const
+                {
+                        return !(*this == order);
+                }
 
-                friend std::ostream &operator<<(std::ostream &os, const Order &order);
+                friend std::ostream &operator<<(std::ostream &os, const Order &order)
+                {
+                        os << "Order{";
+                        os << "id: " << order.f_id << ", ";
+                        os << "price: " << order.f_price << ", ";
+                        os << "quantity: " << order.f_quantity << ", ";
+                        os << "side: " << order.f_side << ", ";
+                        os << "timestamp: " << order.f_timestamp;
+                        os << "}";
+                        return os;
+                }
 
                 [[nodiscard]] common::OrderId id() const
                 {
@@ -77,29 +89,7 @@ namespace orderbook
                 common::Side f_side;
                 common::Timestamp f_timestamp;
         };
-
-        inline bool Order::operator==(const Order &order) const
-        {
-                return this->f_id == order.f_id;
-        }
-
-        inline bool Order::operator!=(const Order &order) const
-        {
-                return !(*this == order);
-        }
-
-        inline std::ostream &operator<<(std::ostream &os, const Order &order)
-        {
-                os << "Order{";
-                os << "id: " << order.f_id << ", ";
-                os << "price: " << order.f_price << ", ";
-                os << "quantity: " << order.f_quantity << ", ";
-                os << "side: " << order.f_side << ", ";
-                os << "timestamp: " << order.f_timestamp;
-                os << "}";
-                return os;
-        }
-}
+} // namespace orderbook
 
 template<>
 struct std::hash<orderbook::Order>
@@ -110,4 +100,4 @@ struct std::hash<orderbook::Order>
         }
 };
 
-#endif //ORDER_H
+#endif // ORDER_H

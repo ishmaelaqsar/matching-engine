@@ -14,12 +14,36 @@ TEST(SerDeTest, ModifyOrderRequest)
         const ModifyOrderRequest expected_request = {expected_order_id, expected_price, expected_quantity};
 
         const auto buffer = new char[expected_request.size()];
-        ModifyOrderRequest::serialize(expected_request, buffer);
+        expected_request.serialize(buffer);
 
-        const auto request = ModifyOrderRequest::deserialize(buffer);
+        auto request = ModifyOrderRequest{};
+
+        request.deserialize(buffer);
         delete[] buffer;
 
         ASSERT_EQ(request.order_id(), expected_order_id);
         ASSERT_EQ(request.price(), expected_price);
         ASSERT_EQ(request.quantity(), expected_quantity);
+}
+
+TEST(SerDeTest, ModifyOrderResponse)
+{
+        constexpr auto expected_order_id = 123;
+        constexpr auto expected_price = 122333444555;
+        constexpr auto expected_quantity = 123456;
+        constexpr auto expected_success = true;
+
+        const ModifyOrderResponse expected_response = {expected_order_id, expected_price, expected_quantity, expected_success};
+
+        const auto buffer = new char[expected_response.size()];
+        expected_response.serialize(buffer);
+
+        auto response = ModifyOrderResponse{};
+        response.deserialize(buffer);
+        delete[] buffer;
+
+        ASSERT_EQ(response.order_id(), expected_order_id);
+        ASSERT_EQ(response.price(), expected_price);
+        ASSERT_EQ(response.quantity(), expected_quantity);
+        ASSERT_EQ(response.success(), expected_success);
 }

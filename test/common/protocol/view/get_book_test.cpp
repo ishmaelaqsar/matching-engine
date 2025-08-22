@@ -14,9 +14,10 @@ TEST(SerDeTest, GetBookRequest)
         const auto expected_request = GetBookRequest{expected_symbol};
 
         const auto buffer = new char[expected_request.size()];
-        GetBookRequest::serialize(expected_request, buffer);
+        expected_request.serialize(buffer);
 
-        const auto request = GetBookRequest::deserialize(buffer);
+        auto request = GetBookRequest{};
+        request.deserialize(buffer);
         delete[] buffer;
 
         ASSERT_EQ(request.symbol(), expected_symbol);
@@ -30,12 +31,13 @@ TEST(SerDeTest, GetBookResponse)
         const auto expected_response = GetBookResponse{expected_bids, expected_asks};
 
         const auto buffer = new char[expected_response.size()];
-        GetBookResponse::serialize(expected_response, buffer);
+        expected_response.serialize(buffer);
 
-        const auto response = GetBookResponse::deserialize(buffer);
+        auto response = GetBookResponse{};
+        response.deserialize(buffer);
         delete[] buffer;
 
-        assert_iterable<Level>(expected_bids, response.get_bids(), [](const Level l1, const Level l2) -> void {
+        assert_iterable<Level>(expected_bids, response.bids(), [](const Level l1, const Level l2) -> void {
                 ASSERT_EQ(l1.price, l2.price);
                 ASSERT_EQ(l1.quantity, l2.quantity);
         });

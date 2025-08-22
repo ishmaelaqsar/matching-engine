@@ -1,80 +1,54 @@
 #ifndef ADD_ORDER_H
 #define ADD_ORDER_H
 
-#include <cstring>
-#include <iostream>
 #include <utility>
 
 #include "../../types.h"
+#include "../serialize_helper.h"
+#include "common/protocol/message.h"
 
 namespace common::protocol::trading
 {
-        class AddOrderRequest
+        class AddOrderRequest final : Message
         {
         public:
-                static void serialize(const AddOrderRequest &request, char *data)
-                {
-                        size_t offset = 0;
-
-                        const uint8_t s = request.symbol().length();
-                        std::memcpy(data + offset, &s, sizeof(s));
-                        offset += sizeof(s);
-
-                        std::memcpy(data + offset, request.symbol().data(), s);
-                        offset += s;
-
-                        const uint64_t p = htobe64(request.price());
-                        std::memcpy(data + offset, &p, sizeof(p));
-                        offset += sizeof(p);
-
-                        const uint64_t q = htobe64(request.quantity());
-                        std::memcpy(data + offset, &q, sizeof(q));
-                        offset += sizeof(q);
-
-                        data[offset] = static_cast<uint8_t>(request.side()); // NOLINT(*-narrowing-conversions)
-                }
-
-                static AddOrderRequest deserialize(const char *data)
-                {
-                        size_t offset = 0;
-
-                        uint8_t s;
-                        std::memcpy(&s, data + offset, sizeof(s));
-                        offset += sizeof(s);
-
-                        Symbol symbol;
-                        symbol.resize(s);
-                        std::memcpy(symbol.data(), data + offset, s);
-                        offset += s;
-
-                        uint64_t p;
-                        std::memcpy(&p, data + offset, sizeof(p));
-                        offset += sizeof(p);
-                        const auto price = be64toh(p);
-
-                        uint64_t q;
-                        std::memcpy(&q, data + offset, sizeof(q));
-                        offset += sizeof(q);
-                        const auto quantity = be64toh(q);
-
-                        const auto side = static_cast<Side>(data[offset]);
-                        return {symbol, price, quantity, side};
-                }
-
                 AddOrderRequest() = default;
                 AddOrderRequest(const AddOrderRequest &request) = default;
                 AddOrderRequest(AddOrderRequest &&request) = default;
                 AddOrderRequest &operator=(const AddOrderRequest &request) = default;
                 AddOrderRequest &operator=(AddOrderRequest &&request) = default;
-                ~AddOrderRequest() = default;
+                ~AddOrderRequest() override = default;
 
-                AddOrderRequest(Symbol symbol, const uint64_t price, const uint64_t quantity, const Side side) :
+                AddOrderRequest(Symbol symbol, const Price price, const Quantity quantity, const Side side) :
                     f_symbol(std::move(symbol)), f_price(price), f_quantity(quantity), f_side(side)
                 {}
 
-                [[nodiscard]] uint16_t size() const
+                void serialize(char *data) const override
+                {
+                        size_t offset = 0;
+                        serialize_string(f_symbol, data, &offset);
+                        serialize_uint64(f_price, data, &offset);
+                        serialize_uint64(f_quantity, data, &offset);
+                        serialize_uint8(static_cast<uint8_t>(f_side), data, &offset);
+                }
+
+                void deserialize(const char *data) override
+                {
+                        size_t offset = 0;
+                        f_symbol = deserialize_string(data, &offset);
+                        f_price = deserialize_uint64(data, &offset);
+                        f_quantity = deserialize_uint64(data, &offset);
+                        f_side = static_cast<Side>(deserialize_uint8(data, &offset));
+                }
+
+                [[nodiscard]] size_t size() const override
                 {
                         return f_symbol.length() + sizeof(f_price) + sizeof(f_quantity) + sizeof(f_side);
+                }
+
+                [[nodiscard]] MessageType type() const override
+                {
+                        return MessageType::AddOrderRequest;
                 }
 
                 [[nodiscard]] Symbol symbol() const
@@ -82,12 +56,12 @@ namespace common::protocol::trading
                         return f_symbol;
                 }
 
-                [[nodiscard]] uint64_t price() const
+                [[nodiscard]] Price price() const
                 {
                         return f_price;
                 }
 
-                [[nodiscard]] uint64_t quantity() const
+                [[nodiscard]] Quantity quantity() const
                 {
                         return f_quantity;
                 }
@@ -110,54 +84,55 @@ namespace common::protocol::trading
 
         private:
                 Symbol f_symbol{};
-                uint64_t f_price{};
-                uint64_t f_quantity{};
+                Price f_price{};
+                Quantity f_quantity{};
                 Side f_side = Side::Unknown;
         };
 
-        class AddOrderResponse
+        class AddOrderResponse final : Message
         {
         public:
-                static void serialize(const AddOrderResponse response, char *data)
-                {
-                        const uint64_t id = htobe64(response.order_id());
-                        const uint64_t ts = htobe64(response.timestamp());
-                        std::memcpy(data, &id, sizeof(id));
-                        std::memcpy(data + sizeof(id), &ts, sizeof(ts));
-                }
-
-                static AddOrderResponse deserialize(const char *data)
-                {
-                        uint64_t id, ts;
-                        std::memcpy(&id, data, sizeof(id));
-                        std::memcpy(&ts, data + sizeof(id), sizeof(ts));
-                        const auto order_id = be64toh(id);
-                        const auto timestamp = be64toh(ts);
-                        return {order_id, timestamp};
-                }
-
                 AddOrderResponse() = default;
                 AddOrderResponse(const AddOrderResponse &response) = default;
                 AddOrderResponse(AddOrderResponse &&response) = default;
                 AddOrderResponse &operator=(const AddOrderResponse &response) = default;
                 AddOrderResponse &operator=(AddOrderResponse &&response) = default;
-                ~AddOrderResponse() = default;
+                ~AddOrderResponse() override = default;
 
-                AddOrderResponse(const uint64_t order_id, const uint64_t timestamp) :
+                AddOrderResponse(const OrderId order_id, const Timestamp timestamp) :
                     f_order_id(order_id), f_timestamp(timestamp)
                 {}
 
-                [[nodiscard]] uint16_t size() const
+                void serialize(char *data) const override
+                {
+                        size_t offset = 0;
+                        serialize_uint64(f_order_id, data, &offset);
+                        serialize_uint64(f_timestamp, data, &offset);
+                }
+
+                void deserialize(const char *data) override
+                {
+                        size_t offset = 0;
+                        f_order_id = deserialize_uint64(data, &offset);
+                        f_timestamp = deserialize_uint64(data, &offset);
+                }
+
+                [[nodiscard]] size_t size() const override
                 {
                         return sizeof(f_order_id) + sizeof(f_timestamp);
                 }
 
-                [[nodiscard]] uint64_t order_id() const
+                [[nodiscard]] MessageType type() const override
+                {
+                        return MessageType::AddOrderResponse;
+                }
+
+                [[nodiscard]] OrderId order_id() const
                 {
                         return f_order_id;
                 }
 
-                [[nodiscard]] uint64_t timestamp() const
+                [[nodiscard]] Timestamp timestamp() const
                 {
                         return f_timestamp;
                 }
@@ -172,8 +147,8 @@ namespace common::protocol::trading
                 }
 
         private:
-                uint64_t f_order_id{};
-                uint64_t f_timestamp{};
+                OrderId f_order_id{};
+                Timestamp f_timestamp{};
         };
 } // namespace common::protocol::trading
 

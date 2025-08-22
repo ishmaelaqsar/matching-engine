@@ -13,7 +13,7 @@ namespace common
         using Timestamp = uint64_t;
         using Price = uint64_t;
         using Quantity = uint64_t;
-        using StrLen = uint16_t;
+        using StrLen = uint8_t;
 
         enum class Side : uint8_t
         {

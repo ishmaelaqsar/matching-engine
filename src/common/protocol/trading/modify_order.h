@@ -1,82 +1,65 @@
 #ifndef MODIFY_ORDER_H
 #define MODIFY_ORDER_H
 
-#include <cstdint>
-#include <cstring>
-#include <endian.h>
 #include <iostream>
 
 #include "../../types.h"
+#include "../serialize_helper.h"
+#include "common/protocol/message.h"
 
 namespace common::protocol::trading
 {
-        class ModifyOrderRequest
+        class ModifyOrderRequest final : Message
         {
         public:
-                static void serialize(const ModifyOrderRequest &request, char *data)
-                {
-                        size_t offset = 0;
-
-                        const uint64_t o = htobe64(request.f_order_id);
-                        std::memcpy(data + offset, &o, sizeof(o));
-                        offset += sizeof(o);
-
-                        const uint64_t p = htobe64(request.f_price);
-                        std::memcpy(data + offset, &p, sizeof(p));
-                        offset += sizeof(p);
-
-                        const uint64_t q = htobe64(request.f_quantity);
-                        std::memcpy(data + offset, &q, sizeof(q));
-                }
-
-                static ModifyOrderRequest deserialize(const char *data)
-                {
-                        size_t offset = 0;
-
-                        uint64_t o;
-                        std::memcpy(&o, data + offset, sizeof(o));
-                        offset += sizeof(o);
-                        const auto order_id = be64toh(o);
-
-                        uint64_t p;
-                        std::memcpy(&p, data + offset, sizeof(p));
-                        offset += sizeof(p);
-                        const auto price = be64toh(p);
-
-                        uint64_t q;
-                        std::memcpy(&q, data + offset, sizeof(q));
-                        const auto quantity = be64toh(q);
-
-                        return {order_id, price, quantity};
-                }
-
                 ModifyOrderRequest() = default;
                 ModifyOrderRequest(const ModifyOrderRequest &request) = default;
                 ModifyOrderRequest(ModifyOrderRequest &&request) = default;
                 ModifyOrderRequest &operator=(const ModifyOrderRequest &request) = default;
                 ModifyOrderRequest &operator=(ModifyOrderRequest &&request) = default;
-                ~ModifyOrderRequest() = default;
+                ~ModifyOrderRequest() override = default;
 
-                ModifyOrderRequest(const uint64_t order_id, const uint64_t price, const uint64_t quantity) :
+                ModifyOrderRequest(const OrderId order_id, const Price price, const Quantity quantity) :
                     f_order_id(order_id), f_price(price), f_quantity(quantity)
                 {}
 
-                [[nodiscard]] uint16_t size() const
+                void serialize(char *data) const override
+                {
+                        size_t offset = 0;
+                        serialize_uint64(f_order_id, data, &offset);
+                        serialize_uint64(f_price, data, &offset);
+                        serialize_uint64(f_quantity, data, &offset);
+                }
+
+                void deserialize(const char *data) override
+                {
+                        size_t offset = 0;
+                        f_order_id = deserialize_uint64(data, &offset);
+                        f_price = deserialize_uint64(data, &offset);
+                        f_quantity = deserialize_uint64(data, &offset);
+                }
+
+                [[nodiscard]] size_t size() const override
                 {
                         return sizeof(f_order_id) + sizeof(f_price) + sizeof(f_quantity);
                 }
 
-                [[nodiscard]] uint64_t order_id() const
+                [[nodiscard]] MessageType type() const override
+                {
+                        return MessageType::ModifyOrderRequest;
+                }
+
+                [[nodiscard]] OrderId order_id() const
                 {
                         return f_order_id;
                 }
 
-                [[nodiscard]] uint64_t price() const
+                [[nodiscard]] Price price() const
                 {
                         return f_price;
                 }
 
-                [[nodiscard]] uint64_t quantity() const
+                [[nodiscard]] Quantity quantity() const
                 {
                         return f_quantity;
                 }
@@ -93,8 +76,89 @@ namespace common::protocol::trading
 
         private:
                 OrderId f_order_id{};
-                uint64_t f_price{};
-                uint64_t f_quantity{};
+                Price f_price{};
+                Quantity f_quantity{};
+        };
+
+        class ModifyOrderResponse final : Message
+        {
+        public:
+                ModifyOrderResponse() = default;
+                ModifyOrderResponse(const ModifyOrderResponse &response) = default;
+                ModifyOrderResponse(ModifyOrderResponse &&response) = default;
+                ModifyOrderResponse &operator=(const ModifyOrderResponse &response) = default;
+                ModifyOrderResponse &operator=(ModifyOrderResponse &&response) = default;
+                ~ModifyOrderResponse() override = default;
+
+                ModifyOrderResponse(const OrderId order_id, const Price price, const Quantity quantity,
+                                    const bool success) :
+                    f_order_id(order_id), f_price(price), f_quantity(quantity), f_success(success)
+                {}
+
+                void serialize(char *data) const override
+                {
+                        size_t offset = 0;
+                        serialize_uint64(f_order_id, data, &offset);
+                        serialize_uint64(f_price, data, &offset);
+                        serialize_uint64(f_quantity, data, &offset);
+                        serialize_uint8(f_success, data, &offset);
+                }
+
+                void deserialize(const char *data) override
+                {
+                        size_t offset = 0;
+                        f_order_id = deserialize_uint64(data, &offset);
+                        f_price = deserialize_uint64(data, &offset);
+                        f_quantity = deserialize_uint64(data, &offset);
+                        f_success = static_cast<bool>(deserialize_uint8(data, &offset));
+                }
+
+                [[nodiscard]] size_t size() const override
+                {
+                        return sizeof(f_order_id) + sizeof(f_price) + sizeof(f_quantity) + sizeof(f_success);
+                }
+
+                [[nodiscard]] MessageType type() const override
+                {
+                        return MessageType::ModifyOrderResponse;
+                }
+
+                [[nodiscard]] OrderId order_id() const
+                {
+                        return f_order_id;
+                }
+
+                [[nodiscard]] Price price() const
+                {
+                        return f_price;
+                }
+
+                [[nodiscard]] Quantity quantity() const
+                {
+                        return f_quantity;
+                }
+
+                [[nodiscard]] bool success() const
+                {
+                        return f_success;
+                }
+
+                friend std::ostream &operator<<(std::ostream &os, const ModifyOrderResponse &response)
+                {
+                        os << "ModifyOrderResponse{";
+                        os << "order_id: " << response.f_order_id << ", ";
+                        os << "price: " << response.f_price << ", ";
+                        os << "quantity: " << response.f_quantity << ", ";
+                        os << "success: " << response.f_success;
+                        os << "}";
+                        return os;
+                }
+
+        private:
+                OrderId f_order_id{};
+                Price f_price{};
+                Quantity f_quantity{};
+                bool f_success{};
         };
 } // namespace common::protocol::trading
 

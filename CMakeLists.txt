@@ -15,7 +15,9 @@ add_compile_definitions(RINGBUFFER_CAPACITY=${RINGBUFFER_CAPACITY})
 
 # Source file organization
 set(COMMON_HEADERS
+        src/common/protocol/serialize_helper.h
         src/common/protocol/ring_buffer.h
+        src/common/protocol/message.h
         src/common/protocol/view/get_book.h
         src/common/protocol/trading/add_order.h
         src/common/protocol/trading/modify_order.h
@@ -112,7 +114,7 @@ enable_testing()
 # Test executable
 add_executable(matching_engine_test
         ${COMMON_HEADERS}
-        ${ORDER_BOOK_HEADERS}  # Tests might need book headers too
+        ${ORDER_BOOK_HEADERS}
         ${TEST_SOURCES}
 )
 

@@ -32,3 +32,12 @@ TEST(SerDeTest, HeaderAddOrderResponse)
         ASSERT_EQ(expected_type, type);
         ASSERT_EQ(expected_length, length);
 }
+
+TEST(SerDeTest, HeaderError)
+{
+        char buffer[MessageHeader::Size];
+        EXPECT_THROW(
+                MessageHeader::serialize({MessageType::AddOrderRequest, std::numeric_limits<uint16_t>::max() + 1}, buffer),
+                std::length_error
+                );
+}

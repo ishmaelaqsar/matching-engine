@@ -1,61 +1,53 @@
 #ifndef ADD_ORDER_H
 #define ADD_ORDER_H
 
-#include <cstring>
 #include <utility>
 
 #include "../../types.h"
+#include "../serialize_helper.h"
+#include "common/protocol/message.h"
 
 namespace common::protocol::view
 {
         struct Level
         {
-                uint64_t price;
-                uint64_t quantity;
+                Price price;
+                Quantity quantity;
         };
 
-        class GetBookRequest
+        class GetBookRequest final : Message
         {
         public:
-                static void serialize(const GetBookRequest &request, char *data)
-                {
-                        size_t offset = 0;
-
-                        const uint8_t s = request.f_symbol.length();
-                        std::memcpy(data + offset, &s, sizeof(s));
-                        offset += sizeof(s);
-
-                        std::memcpy(data + offset, request.f_symbol.data(), s);
-                }
-
-                static GetBookRequest deserialize(const char *data)
-                {
-                        size_t offset = 0;
-
-                        uint8_t s;
-                        std::memcpy(&s, data + offset, sizeof(s));
-                        offset += sizeof(s);
-
-                        Symbol symbol;
-                        symbol.resize(s);
-                        std::memcpy(symbol.data(), data + offset, s);
-
-                        return GetBookRequest{symbol};
-                }
-
                 GetBookRequest() = default;
                 GetBookRequest(const GetBookRequest &) = default;
                 GetBookRequest(GetBookRequest &&) = default;
                 GetBookRequest &operator=(const GetBookRequest &) = default;
                 GetBookRequest &operator=(GetBookRequest &&) = default;
-                ~GetBookRequest() = default;
+                ~GetBookRequest() override = default;
 
                 explicit GetBookRequest(Symbol symbol) : f_symbol(std::move(symbol))
                 {}
 
-                [[nodiscard]] uint16_t size() const
+                void serialize(char *data) const override
+                {
+                        size_t offset = 0;
+                        serialize_string(f_symbol, data, &offset);
+                }
+
+                void deserialize(const char *data) override
+                {
+                        size_t offset = 0;
+                        f_symbol = deserialize_string(data, &offset);
+                }
+
+                [[nodiscard]] size_t size() const override
                 {
                         return f_symbol.size();
+                }
+
+                [[nodiscard]] MessageType type() const override
+                {
+                        return MessageType::GetBookRequest;
                 }
 
                 [[nodiscard]] Symbol symbol() const
@@ -63,69 +55,27 @@ namespace common::protocol::view
                         return f_symbol;
                 }
 
+                friend std::ostream &operator<<(std::ostream &os, const GetBookRequest &request)
+                {
+                        os << "GetBookRequest{";
+                        os << "symbol: " << request.f_symbol;
+                        os << "}";
+                        return os;
+                }
+
         private:
                 Symbol f_symbol{};
         };
 
-        class GetBookResponse
+        class GetBookResponse final : Message
         {
         public:
-                static void serialize(const GetBookResponse &response, char *data)
-                {
-                        size_t offset = 0;
-                        const uint8_t num_bids = response.f_bids.size();
-                        const uint8_t num_asks = response.f_asks.size();
-
-                        std::memcpy(data + offset, &num_bids, sizeof(num_bids));
-                        offset += sizeof(num_bids);
-
-                        for (auto i = 0; i < num_bids; i++) {
-                                std::memcpy(data + offset, &response.f_bids[i], sizeof(response.f_bids[i]));
-                                offset += sizeof(response.f_bids[i]);
-                        }
-
-                        std::memcpy(data + offset, &num_asks, sizeof(num_asks));
-                        offset += sizeof(num_asks);
-
-                        for (auto i = 0; i < num_asks; i++) {
-                                std::memcpy(data + offset, &response.f_asks[i], sizeof(response.f_asks[i]));
-                                offset += sizeof(response.f_asks[i]);
-                        }
-                }
-
-                static GetBookResponse deserialize(const char *data)
-                {
-                        size_t offset = 0;
-
-                        uint8_t num_bids;
-                        std::memcpy(&num_bids, data + offset, sizeof(num_bids));
-                        offset += sizeof(num_bids);
-
-                        auto bids = std::vector<Level>(num_bids);
-                        for (auto i = 0; i < num_bids; i++) {
-                                std::memcpy(bids.data() + i, &data[offset], sizeof(bids[i]));
-                                offset += sizeof(bids[i]);
-                        }
-
-                        uint8_t num_asks;
-                        std::memcpy(&num_asks, data + offset, sizeof(num_asks));
-                        offset += sizeof(num_asks);
-
-                        auto asks = std::vector<Level>(num_asks);
-                        for (auto i = 0; i < num_asks; i++) {
-                                std::memcpy(asks.data() + i, &data[offset], sizeof(asks[i]));
-                                offset += sizeof(asks[i]);
-                        }
-
-                        return {std::move(bids), std::move(asks)};
-                }
-
                 GetBookResponse() = default;
                 GetBookResponse(const GetBookResponse &response) = default;
                 GetBookResponse(GetBookResponse &&response) = default;
                 GetBookResponse &operator=(const GetBookResponse &) = default;
                 GetBookResponse &operator=(GetBookResponse &&) = default;
-                ~GetBookResponse() = default;
+                ~GetBookResponse() override = default;
 
                 GetBookResponse(std::vector<Level> bids, std::vector<Level> asks) :
                     f_bids(std::move(bids)), f_asks(std::move(asks))
@@ -135,18 +85,54 @@ namespace common::protocol::view
                     f_bids(bids), f_asks(asks)
                 {}
 
-                [[nodiscard]] uint16_t size() const
+                void serialize(char *data) const override
                 {
-                        return sizeof(f_bids.size()) + (f_bids.size() * sizeof(Level)) + sizeof(f_asks.size()) +
-                               (f_asks.size() * sizeof(Level));
+                        size_t offset = 0;
+
+                        serialize_uint8(static_cast<uint8_t>(f_bids.size()), data, &offset);
+                        for (const auto &bid: f_bids) {
+                                serialize_struct(bid, data, &offset);
+                        }
+
+                        serialize_uint8(static_cast<uint8_t>(f_asks.size()), data, &offset);
+                        for (const auto &ask: f_asks) {
+                                serialize_struct(ask, data, &offset);
+                        }
                 }
 
-                [[nodiscard]] std::vector<Level> get_bids() const
+                void deserialize(const char *data) override
+                {
+                        size_t offset = 0;
+
+                        const size_t num_bids = deserialize_uint8(data, &offset);
+                        f_bids = std::vector<Level>(num_bids);
+                        for (size_t i = 0; i < num_bids; i++) {
+                                f_bids[i] = deserialize_struct<Level>(data, &offset);
+                        }
+
+                        const size_t num_asks = deserialize_uint8(data, &offset);
+                        f_asks = std::vector<Level>(num_asks);
+                        for (size_t i = 0; i < num_asks; i++) {
+                                f_asks[i] = deserialize_struct<Level>(data, &offset);
+                        }
+                }
+
+                [[nodiscard]] size_t size() const override
+                {
+                        return 1 + (f_bids.size() * sizeof(Level)) + 1 + (f_asks.size() * sizeof(Level));
+                }
+
+                [[nodiscard]] MessageType type() const override
+                {
+                        return MessageType::GetBookResponse;
+                }
+
+                [[nodiscard]] std::vector<Level> bids() const
                 {
                         return f_bids;
                 }
 
-                [[nodiscard]] std::vector<Level> get_asks() const
+                [[nodiscard]] std::vector<Level> asks() const
                 {
                         return f_asks;
                 }

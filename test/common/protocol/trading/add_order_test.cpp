@@ -15,9 +15,10 @@ TEST(SerDeTest, AddOrderRequest)
         const AddOrderRequest expected_request = {expected_symbol, expected_price, expected_quantity, expected_side};
 
         const auto buffer = new char[expected_request.size()];
-        AddOrderRequest::serialize(expected_request, buffer);
+        expected_request.serialize(buffer);
 
-        const auto request = AddOrderRequest::deserialize(buffer);
+        auto request = AddOrderRequest{};
+        request.deserialize(buffer);
         delete[] buffer;
 
         ASSERT_EQ(request.symbol(), expected_symbol);
@@ -34,9 +35,10 @@ TEST(SerDeTest, AddOrderResponse)
         const AddOrderResponse expected_response = {expected_order_id, expected_timestamp};
 
         const auto buffer = new char[expected_response.size()];
-        AddOrderResponse::serialize(expected_response, buffer);
+        expected_response.serialize(buffer);
 
-        const auto response = AddOrderResponse::deserialize(buffer);
+        auto response = AddOrderResponse{};
+        response.deserialize(buffer);
         delete[] buffer;
 
         ASSERT_EQ(response.order_id(), expected_order_id);

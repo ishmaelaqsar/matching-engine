@@ -30,11 +30,28 @@ namespace orderbook
 
                 ~Trade() = default;
 
-                bool operator==(const Trade &trade) const;
+                bool operator==(const Trade &trade) const
+                {
+                        return f_id == trade.f_id;
+                }
 
-                bool operator!=(const Trade &trade) const;
+                bool operator!=(const Trade &trade) const
+                {
+                        return !(*this == trade);
+                }
 
-                friend std::ostream &operator<<(std::ostream &os, const Trade &trade);
+                friend std::ostream &operator<<(std::ostream &os, const Trade &trade)
+                {
+                        os << "Trade{";
+                        os << "id: " << trade.f_id << ", ";
+                        os << "price: " << trade.f_price << ", ";
+                        os << "quantity: " << trade.f_quantity << ", ";
+                        os << "timestamp: " << trade.f_timestamp << ", ";
+                        os << "source_order: " << trade.f_source_order << ", ";
+                        os << "matched_order: " << trade.f_matched_order;
+                        os << "}";
+                        return os;
+                }
 
                 [[nodiscard]] common::TradeId id() const
                 {
@@ -74,29 +91,6 @@ namespace orderbook
                 common::OrderId f_source_order;
                 common::OrderId f_matched_order;
         };
-
-        inline bool Trade::operator==(const Trade &trade) const
-        {
-                return f_id == trade.f_id;
-        }
-
-        inline bool Trade::operator!=(const Trade &trade) const
-        {
-                return !(*this == trade);
-        }
-
-        inline std::ostream &operator<<(std::ostream &os, const Trade &trade)
-        {
-                os << "Trade{";
-                os << "id: " << trade.f_id << ", ";
-                os << "price: " << trade.f_price << ", ";
-                os << "quantity: " << trade.f_quantity << ", ";
-                os << "timestamp: " << trade.f_timestamp << ", ";
-                os << "source_order: " << trade.f_source_order << ", ";
-                os << "matched_order: " << trade.f_matched_order;
-                os << "}";
-                return os;
-        }
 } // namespace orderbook
 
 template<>
