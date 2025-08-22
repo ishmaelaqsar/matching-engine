@@ -70,39 +70,40 @@ namespace tcp
                 }
 
                 void handle_read_result(const common::MessageType &type,
-                                               const std::shared_ptr<std::vector<char>> &payload_buffer,
-                                               const boost::system::error_code &error_code)
+                                        const std::shared_ptr<std::vector<char>> &payload_buffer,
+                                        const boost::system::error_code &error_code)
                 {
                         if (error_code) {
                                 std::cerr << "Read error: " << error_code.message() << std::endl;
                                 return;
                         }
 
-                        const auto self = shared_from_this();
-
                         switch (type) {
-                                case common::MessageType::AddOrderRequest:
-                                        const auto request = common::protocol::trading::AddOrderRequest::deserialize(
-                                                payload_buffer->data());
-                                        const auto response =
+                                case common::MessageType::AddOrderRequest: {
+                                        auto request = common::protocol::trading::AddOrderRequest{};
+                                        request.deserialize(payload_buffer->data());
+                                        common::protocol::trading::AddOrderResponse response =
                                                 handlers::TradingMessageHandler::handle_add_order_request(request);
-
+                                        write_message(response);
                                         break;
+                                }
                                 default: break;
                         }
                 }
 
-                void write_message(const common::protocol::Message &message)
+                template<typename T>
+                void write_message(const T &message)
                 {
+                        auto self = shared_from_this();
                         const size_t total_size = MessageHeader::Size + message.size();
                         const auto response_buffer = new char[total_size];
-                        MessageHeader::serialize({common::MessageType::AddOrderResponse, message.size()}, response_buffer);
-                        common::protocol::trading::AddOrderResponse::serialize(
-                                response, response_buffer + MessageHeader::Size);
-                        boost::asio::async_write(self->socket(),
-                                                 boost::asio::buffer(response_buffer, total_size),
-                                                 [self](const boost::system::error_code ec,
-                                                        size_t) -> void { self->handle_write(ec); });
+                        MessageHeader::serialize({common::MessageType::AddOrderResponse, message.size()},
+                                                 response_buffer);
+                        message.serialize(response_buffer + MessageHeader::Size);
+                        boost::asio::async_write(
+                                self->socket(), boost::asio::buffer(response_buffer, total_size),
+                                [self](const boost::system::error_code ec, size_t) -> void { self->handle_write(ec); });
+                        delete[] response_buffer;
                 }
 
                 void handle_write(const boost::system::error_code &ec)
