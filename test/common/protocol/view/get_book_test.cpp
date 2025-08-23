@@ -13,7 +13,7 @@ TEST(SerDeTest, GetBookRequest)
 
         const auto expected_request = GetBookRequest{expected_symbol};
 
-        const auto buffer = new char[expected_request.size()];
+        const auto buffer = new unsigned char[expected_request.size()];
         expected_request.serialize(buffer);
 
         auto request = GetBookRequest{};
@@ -30,7 +30,7 @@ TEST(SerDeTest, GetBookResponse)
 
         const auto expected_response = GetBookResponse{expected_bids, expected_asks};
 
-        const auto buffer = new char[expected_response.size()];
+        const auto buffer = new unsigned char[expected_response.size()];
         expected_response.serialize(buffer);
 
         auto response = GetBookResponse{};

@@ -1,12 +1,12 @@
 #ifndef TRADING_MESSAGE_HANDLERS_H
 #define TRADING_MESSAGE_HANDLERS_H
 
+#include <boost/log/trivial.hpp>
 #include <boost/asio/write.hpp>
 #include <chrono>
 #include <iostream>
 
 #include "../../common/protocol/trading/add_order.h"
-#include "../../common/types.h"
 
 namespace tcp::handlers
 {
@@ -16,7 +16,7 @@ namespace tcp::handlers
                 static common::protocol::trading::AddOrderResponse
                 handle_add_order_request(const common::protocol::trading::AddOrderRequest &request)
                 {
-                        std::cout << "received: " << request << std::endl;
+                        BOOST_LOG_TRIVIAL(info) << "Received << " << request;
 
                         common::protocol::trading::AddOrderResponse response{};
 

@@ -40,7 +40,7 @@ namespace tcp
                 void open()
                 {
                         const auto self = shared_from_this();
-                        const auto header_buffer = std::make_shared<std::array<char, MessageHeader::Size>>();
+                        const auto header_buffer = std::make_shared<std::array<unsigned char, MessageHeader::Size>>();
 
                         boost::asio::async_read(f_socket, boost::asio::buffer(*header_buffer),
                                                 [self, header_buffer](const boost::system::error_code ec, size_t) {
@@ -50,7 +50,7 @@ namespace tcp
 
         private:
                 void handle_read(const boost::system::error_code &error_code,
-                                 const std::shared_ptr<std::array<char, MessageHeader::Size>> &header_buffer)
+                                 const std::shared_ptr<std::array<unsigned char, MessageHeader::Size>> &header_buffer)
                 {
                         if (error_code) {
                                 std::cerr << "Read error: " << error_code.message() << std::endl;
@@ -60,7 +60,7 @@ namespace tcp
                         auto [type, length] = MessageHeader::deserialize(header_buffer->data());
 
                         const auto self = shared_from_this();
-                        auto payload_buffer = std::make_shared<std::vector<char>>(length);
+                        auto payload_buffer = std::make_shared<std::vector<unsigned char>>(length);
 
                         boost::asio::async_read(
                                 f_socket, boost::asio::buffer(*payload_buffer),
@@ -70,7 +70,7 @@ namespace tcp
                 }
 
                 void handle_read_result(const common::MessageType &type,
-                                        const std::shared_ptr<std::vector<char>> &payload_buffer,
+                                        const std::shared_ptr<std::vector<unsigned char>> &payload_buffer,
                                         const boost::system::error_code &error_code)
                 {
                         if (error_code) {
@@ -82,7 +82,7 @@ namespace tcp
                                 case common::MessageType::AddOrderRequest: {
                                         auto request = common::protocol::trading::AddOrderRequest{};
                                         request.deserialize(payload_buffer->data());
-                                        common::protocol::trading::AddOrderResponse response =
+                                        const common::protocol::trading::AddOrderResponse response =
                                                 handlers::TradingMessageHandler::handle_add_order_request(request);
                                         write_message(response);
                                         break;
@@ -96,7 +96,7 @@ namespace tcp
                 {
                         auto self = shared_from_this();
                         const size_t total_size = MessageHeader::Size + message.size();
-                        const auto response_buffer = new char[total_size];
+                        const auto response_buffer = new unsigned char[total_size];
                         MessageHeader::serialize({common::MessageType::AddOrderResponse, message.size()},
                                                  response_buffer);
                         message.serialize(response_buffer + MessageHeader::Size);

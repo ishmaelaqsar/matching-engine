@@ -23,7 +23,7 @@ namespace common::protocol::trading
                     f_order_id(order_id), f_price(price), f_quantity(quantity)
                 {}
 
-                void serialize(char *data) const override
+                void serialize(unsigned char *data) const override
                 {
                         size_t offset = 0;
                         serialize_uint64(f_order_id, data, &offset);
@@ -31,7 +31,7 @@ namespace common::protocol::trading
                         serialize_uint64(f_quantity, data, &offset);
                 }
 
-                void deserialize(const char *data) override
+                void deserialize(const unsigned char *data) override
                 {
                         size_t offset = 0;
                         f_order_id = deserialize_uint64(data, &offset);
@@ -95,7 +95,7 @@ namespace common::protocol::trading
                     f_order_id(order_id), f_price(price), f_quantity(quantity), f_success(success)
                 {}
 
-                void serialize(char *data) const override
+                void serialize(unsigned char *data) const override
                 {
                         size_t offset = 0;
                         serialize_uint64(f_order_id, data, &offset);
@@ -104,7 +104,7 @@ namespace common::protocol::trading
                         serialize_uint8(f_success, data, &offset);
                 }
 
-                void deserialize(const char *data) override
+                void deserialize(const unsigned char *data) override
                 {
                         size_t offset = 0;
                         f_order_id = deserialize_uint64(data, &offset);

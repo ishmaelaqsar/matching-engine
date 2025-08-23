@@ -3,7 +3,6 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/bind.hpp>
 #include <iostream>
 
 #include "connection.h"
@@ -26,7 +25,7 @@ namespace tcp
                 void start_accept()
                 {
                         const auto connection = Connection::create(f_io_context);
-                        f_acceptor.async_accept(connection->socket(), [this, connection](boost::system::error_code ec) {
+                        f_acceptor.async_accept(connection->socket(), [this, connection](const boost::system::error_code ec) {
                                 handle_accept(ec, connection);
                         });
                 }

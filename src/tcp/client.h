@@ -64,10 +64,10 @@ namespace tcp
                         if (!f_connected) throw std::runtime_error("Not connected");
 
                         const size_t buffer_size = MessageHeader::Size + request.size();
-                        const auto buffer = new char[buffer_size];
+                        const auto buffer = new unsigned char[buffer_size];
 
-                        MessageHeader::serialize({common::MessageType::AddOrderRequest, request.size()}, buffer);
-                        common::protocol::trading::AddOrderRequest::serialize(request, buffer + MessageHeader::Size);
+                        MessageHeader::serialize({request.type(), request.size()}, buffer);
+                        request.serialize(buffer + MessageHeader::Size);
 
                         f_socket.send(boost::asio::buffer(buffer, buffer_size));
                         delete[] buffer;
@@ -78,7 +78,7 @@ namespace tcp
         private:
                 common::protocol::trading::AddOrderResponse add_order_response()
                 {
-                        std::array<char, MessageHeader::Size> header_buffer{};
+                        std::array<unsigned char, MessageHeader::Size> header_buffer{};
                         f_socket.receive(boost::asio::buffer(header_buffer));
                         auto [type, length] = MessageHeader::deserialize(header_buffer.data());
 
@@ -86,10 +86,11 @@ namespace tcp
                                 throw std::runtime_error("Unexpected message type");
                         }
 
-                        const auto payload_buffer = new char[length];
+                        const auto payload_buffer = new unsigned char[length];
+                        auto response = common::protocol::trading::AddOrderResponse{};
 
                         f_socket.receive(boost::asio::buffer(payload_buffer, length));
-                        const auto response = common::protocol::trading::AddOrderResponse::deserialize(payload_buffer);
+                        response.deserialize(payload_buffer);
 
                         delete[] payload_buffer;
 

@@ -28,13 +28,13 @@ namespace common::protocol::view
                 explicit GetBookRequest(Symbol symbol) : f_symbol(std::move(symbol))
                 {}
 
-                void serialize(char *data) const override
+                void serialize(unsigned char *data) const override
                 {
                         size_t offset = 0;
                         serialize_string(f_symbol, data, &offset);
                 }
 
-                void deserialize(const char *data) override
+                void deserialize(unsigned const char *data) override
                 {
                         size_t offset = 0;
                         f_symbol = deserialize_string(data, &offset);
@@ -42,7 +42,7 @@ namespace common::protocol::view
 
                 [[nodiscard]] size_t size() const override
                 {
-                        return f_symbol.size();
+                        return sizeof(StrLen) + f_symbol.size();
                 }
 
                 [[nodiscard]] MessageType type() const override
@@ -85,7 +85,7 @@ namespace common::protocol::view
                     f_bids(bids), f_asks(asks)
                 {}
 
-                void serialize(char *data) const override
+                void serialize(unsigned char *data) const override
                 {
                         size_t offset = 0;
 
@@ -100,7 +100,7 @@ namespace common::protocol::view
                         }
                 }
 
-                void deserialize(const char *data) override
+                void deserialize(const unsigned char *data) override
                 {
                         size_t offset = 0;
 

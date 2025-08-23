@@ -23,7 +23,7 @@ namespace common::protocol::trading
                     f_symbol(std::move(symbol)), f_price(price), f_quantity(quantity), f_side(side)
                 {}
 
-                void serialize(char *data) const override
+                void serialize(unsigned char *data) const override
                 {
                         size_t offset = 0;
                         serialize_string(f_symbol, data, &offset);
@@ -32,7 +32,7 @@ namespace common::protocol::trading
                         serialize_uint8(static_cast<uint8_t>(f_side), data, &offset);
                 }
 
-                void deserialize(const char *data) override
+                void deserialize(const unsigned char *data) override
                 {
                         size_t offset = 0;
                         f_symbol = deserialize_string(data, &offset);
@@ -43,7 +43,7 @@ namespace common::protocol::trading
 
                 [[nodiscard]] size_t size() const override
                 {
-                        return f_symbol.length() + sizeof(f_price) + sizeof(f_quantity) + sizeof(f_side);
+                        return sizeof(StrLen) + f_symbol.length() + sizeof(f_price) + sizeof(f_quantity) + sizeof(f_side);
                 }
 
                 [[nodiscard]] MessageType type() const override
@@ -103,14 +103,14 @@ namespace common::protocol::trading
                     f_order_id(order_id), f_timestamp(timestamp)
                 {}
 
-                void serialize(char *data) const override
+                void serialize(unsigned char *data) const override
                 {
                         size_t offset = 0;
                         serialize_uint64(f_order_id, data, &offset);
                         serialize_uint64(f_timestamp, data, &offset);
                 }
 
-                void deserialize(const char *data) override
+                void deserialize(const unsigned char *data) override
                 {
                         size_t offset = 0;
                         f_order_id = deserialize_uint64(data, &offset);

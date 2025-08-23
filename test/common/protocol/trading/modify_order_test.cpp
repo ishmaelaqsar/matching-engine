@@ -13,7 +13,7 @@ TEST(SerDeTest, ModifyOrderRequest)
 
         const ModifyOrderRequest expected_request = {expected_order_id, expected_price, expected_quantity};
 
-        const auto buffer = new char[expected_request.size()];
+        const auto buffer = new unsigned char[expected_request.size()];
         expected_request.serialize(buffer);
 
         auto request = ModifyOrderRequest{};
@@ -35,7 +35,7 @@ TEST(SerDeTest, ModifyOrderResponse)
 
         const ModifyOrderResponse expected_response = {expected_order_id, expected_price, expected_quantity, expected_success};
 
-        const auto buffer = new char[expected_response.size()];
+        const auto buffer = new unsigned char[expected_response.size()];
         expected_response.serialize(buffer);
 
         auto response = ModifyOrderResponse{};

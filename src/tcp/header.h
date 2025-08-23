@@ -13,7 +13,7 @@ namespace tcp
 
                 static constexpr size_t Size = sizeof(type) + sizeof(length);
 
-                static void serialize(const MessageHeader message_header, char *data)
+                static void serialize(const MessageHeader message_header, unsigned char *data)
                 {
                         if (message_header.length > std::numeric_limits<uint16_t>::max()) {
                                 throw std::length_error("header.length too big to serialize");
@@ -23,7 +23,7 @@ namespace tcp
                         common::serialize_uint16(static_cast<uint16_t>(message_header.length), data, &offset);
                 }
 
-                static MessageHeader deserialize(const char *data)
+                static MessageHeader deserialize(const unsigned char *data)
                 {
                         size_t offset = 0;
                         const auto type = static_cast<common::MessageType>(common::deserialize_uint8(data, &offset));

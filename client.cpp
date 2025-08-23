@@ -3,7 +3,7 @@
 #include "src/common/protocol/trading/add_order.h"
 #include "src/tcp/client.h"
 
-common::AddOrderRequest parse_line(std::string &line);
+common::protocol::trading::AddOrderRequest parse_line(std::string &line);
 
 int main()
 {
@@ -19,9 +19,9 @@ int main()
 
                         const auto request = parse_line(line);
 
-                        auto [order_id, timestamp] = client.add_order(request);
-                        std::cout << "Order ID: " << order_id << std::endl;
-                        std::cout << "Timestamp: " << timestamp << std::endl;
+                        const auto response = client.add_order(request);
+                        std::cout << "Order ID: " << response.order_id() << std::endl;
+                        std::cout << "Timestamp: " << response.timestamp() << std::endl;
                 }
                 client.disconnect();
         } catch (const std::exception &e) {
@@ -29,7 +29,7 @@ int main()
         }
 }
 
-common::AddOrderRequest parse_line(std::string &line)
+common::protocol::trading::AddOrderRequest parse_line(std::string &line)
 {
         const auto symbol_position = line.find(' ', 0);
         if (symbol_position == std::string::npos) {
@@ -49,7 +49,7 @@ common::AddOrderRequest parse_line(std::string &line)
         const auto symbol = std::string(&line[0], &line[symbol_position]);
         const uint64_t price = std::stoull(std::string(&line[symbol_position + 1], &line[price_position]));
         const uint64_t quantity = std::stoull(std::string(&line[price_position + 1], &line[quantity_position]));
-        const uint8_t raw_side = std::stoull(std::string(&line[quantity_position + 1]));
+        const uint8_t raw_side = static_cast<uint8_t>(std::stoull(std::string(&line[quantity_position + 1])));
 
         common::Side side;
         switch (raw_side) {

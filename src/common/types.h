@@ -25,15 +25,16 @@ namespace common
         inline std::ostream &operator<<(std::ostream &os, const Side &side)
         {
                 switch (side) {
-                        case Side::Unknown: return os << "Unknown";
                         case Side::Buy: return os << "Buy";
                         case Side::Sell: return os << "Sell";
+                        case Side::Unknown:
+                        default: return os << "Unknown";
                 }
-                return os;
         }
 
         enum class MessageType : uint8_t
         {
+                Unknown = 0,
                 AddOrderRequest = 1,
                 AddOrderResponse = 2,
                 ModifyOrderRequest = 3,
@@ -55,8 +56,9 @@ namespace common
                         case MessageType::CancelOrderResponse: return os << "CancelOrderResponse";
                         case MessageType::GetBookRequest: return os << "GetBookRequest";
                         case MessageType::GetBookResponse: return os << "GetBookResponse";
+                        case MessageType::Unknown:
+                        default: return os << "Unknown";
                 }
-                return os;
         }
 } // namespace common
 
