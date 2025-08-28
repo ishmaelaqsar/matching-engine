@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../../src/tcp/header.h"
+#include "../../../src/common/protocol/header.h"
 
 using namespace common;
 using namespace tcp;

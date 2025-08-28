@@ -1,3 +1,4 @@
+#include <boost/log/trivial.hpp>
 #include <iostream>
 
 #include "src/common/protocol/trading/add_order.h"
@@ -20,12 +21,12 @@ int main()
                         const auto request = parse_line(line);
 
                         const auto response = client.add_order(request);
-                        std::cout << "Order ID: " << response.order_id() << std::endl;
-                        std::cout << "Timestamp: " << response.timestamp() << std::endl;
+                        BOOST_LOG_TRIVIAL(info)
+                                << "Order ID: " << response.order_id() << ", Timestamp: " << response.timestamp();
                 }
                 client.disconnect();
         } catch (const std::exception &e) {
-                std::cerr << "Error: " << e.what() << std::endl;
+                BOOST_LOG_TRIVIAL(error) << "Error: " << e.what();
         }
 }
 
@@ -53,10 +54,8 @@ common::protocol::trading::AddOrderRequest parse_line(std::string &line)
 
         common::Side side;
         switch (raw_side) {
-                case 1: side = common::Side::Buy;
-                        break;
-                case 2: side = common::Side::Sell;
-                        break;
+                case 1: side = common::Side::Buy; break;
+                case 2: side = common::Side::Sell; break;
                 default: throw std::invalid_argument("invalid side: " + std::to_string(raw_side));
         }
 

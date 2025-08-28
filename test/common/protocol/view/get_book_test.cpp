@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "../../../../src/common/protocol/header.h"
 #include "../../../../src/common/protocol/view/get_book.h"
-#include "../../../../src/tcp/header.h"
 #include "../../../helpers.h"
 
 using namespace common;

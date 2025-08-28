@@ -3,13 +3,19 @@
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <memory>
+#include <utility>
 
-#include "../common/protocol/trading/add_order.h"
 #include "../common/types.h"
-#include "handlers/trading.h"
-#include "header.h"
+#include "common/ring_buffer.h"
+
+namespace tcp
+{
+        class Server;
+}
 
 namespace tcp
 {
@@ -19,103 +25,96 @@ namespace tcp
                 Connection(const Connection &) = delete;
                 Connection &operator=(const Connection &) = delete;
 
-                explicit Connection(boost::asio::io_context &io_context) : f_socket(io_context)
+                explicit Connection(const common::ConnectionId id, boost::asio::io_context &io_context,
+                                    boost::asio::ip::tcp::socket socket,
+                                    const std::function<void(common::Payload)> &request_enqueue,
+                                    const std::function<void(common::ConnectionId)> &connection_fail) :
+                    f_id(id),
+                    f_request_enqueue(request_enqueue),
+                    f_connection_fail(connection_fail),
+                    f_socket(std::move(socket)),
+                    f_io_context(io_context)
                 {}
 
-                ~Connection()
+                common::ConnectionId id() const
                 {
-                        if (f_socket.is_open()) f_socket.close();
+                        return f_id;
                 }
 
-                static std::shared_ptr<Connection> create(boost::asio::io_context &io_context)
+                void start()
                 {
-                        return std::make_shared<Connection>(io_context);
-                }
-
-                boost::asio::ip::tcp::socket &socket()
-                {
-                        return f_socket;
-                }
-
-                void open()
-                {
-                        const auto self = shared_from_this();
-                        const auto header_buffer = std::make_shared<std::array<unsigned char, MessageHeader::Size>>();
-
-                        boost::asio::async_read(f_socket, boost::asio::buffer(*header_buffer),
-                                                [self, header_buffer](const boost::system::error_code ec, size_t) {
-                                                        self->handle_read(ec, header_buffer);
-                                                });
-                }
-
-        private:
-                void handle_read(const boost::system::error_code &error_code,
-                                 const std::shared_ptr<std::array<unsigned char, MessageHeader::Size>> &header_buffer)
-                {
-                        if (error_code) {
-                                std::cerr << "Read error: " << error_code.message() << std::endl;
-                                return;
-                        }
-
-                        auto [type, length] = MessageHeader::deserialize(header_buffer->data());
-
-                        const auto self = shared_from_this();
-                        auto payload_buffer = std::make_shared<std::vector<unsigned char>>(length);
-
                         boost::asio::async_read(
-                                f_socket, boost::asio::buffer(*payload_buffer),
-                                [self, type, payload_buffer](const boost::system::error_code &ec, size_t) -> void {
-                                        self->handle_read_result(type, payload_buffer, ec);
+                                f_socket, boost::asio::buffer(f_header_buffer),
+                                [self = shared_from_this()](const boost::system::error_code ec, const size_t) -> void {
+                                        self->handle_read(ec);
                                 });
                 }
 
-                void handle_read_result(const common::MessageType &type,
-                                        const std::shared_ptr<std::vector<unsigned char>> &payload_buffer,
-                                        const boost::system::error_code &error_code)
+                void write(const common::protocol::Header &header, const common::Data &data)
+                {
+                        const size_t total_size = common::protocol::Header::Size + header.length;
+                        const auto buffer = std::make_shared<std::vector<unsigned char>>(total_size);
+
+                        common::protocol::Header::serialize(header, buffer->data());
+                        std::memcpy(buffer->data() + common::protocol::Header::Size, data.data(), header.length);
+
+                        boost::asio::async_write(f_socket, boost::asio::buffer(*buffer, total_size),
+                                                 [self = shared_from_this(), buffer](const boost::system::error_code ec,
+                                                                                     size_t) -> void {
+                                                         self->handle_write(ec, buffer);
+                                                 });
+                }
+
+        private:
+                void handle_read(const boost::system::error_code &error_code)
                 {
                         if (error_code) {
-                                std::cerr << "Read error: " << error_code.message() << std::endl;
+                                BOOST_LOG_TRIVIAL(error) << "Read error: " << error_code.message();
                                 return;
                         }
 
-                        switch (type) {
-                                case common::MessageType::AddOrderRequest: {
-                                        auto request = common::protocol::trading::AddOrderRequest{};
-                                        request.deserialize(payload_buffer->data());
-                                        const common::protocol::trading::AddOrderResponse response =
-                                                handlers::TradingMessageHandler::handle_add_order_request(request);
-                                        write_message(response);
-                                        break;
-                                }
-                                default: break;
-                        }
+                        const auto header = common::protocol::Header::deserialize(f_header_buffer.data());
+                        f_payload_buffer.resize(header.length);
+
+                        boost::asio::async_read(
+                                f_socket, boost::asio::buffer(f_payload_buffer.data(), header.length),
+                                [self = shared_from_this(), header](const boost::system::error_code &ec,
+                                                                    const size_t) -> void {
+                                        if (ec) {
+                                                BOOST_LOG_TRIVIAL(error) << "Read error: " << ec.message();
+                                                self->f_connection_fail(self->f_id);
+                                                return;
+                                        }
+                                        auto data = common::Data{};
+                                        if (common::MaxPayloadSize < header.length) {
+                                                BOOST_LOG_TRIVIAL(warning)
+                                                        << "Request size is too big, dropping message.";
+                                        } else {
+                                                std::memcpy(data.data(), self->f_payload_buffer.data(), header.length);
+                                                const auto payload = common::Payload{self->f_id, header, data};
+                                                self->f_request_enqueue(payload);
+                                        }
+                                        self->start();
+                                });
                 }
 
-                template<typename T>
-                void write_message(const T &message)
+                void handle_write(const boost::system::error_code &error_code,
+                                  const std::shared_ptr<std::vector<unsigned char>> &data)
                 {
-                        auto self = shared_from_this();
-                        const size_t total_size = MessageHeader::Size + message.size();
-                        const auto response_buffer = new unsigned char[total_size];
-                        MessageHeader::serialize({common::MessageType::AddOrderResponse, message.size()},
-                                                 response_buffer);
-                        message.serialize(response_buffer + MessageHeader::Size);
-                        boost::asio::async_write(
-                                self->socket(), boost::asio::buffer(response_buffer, total_size),
-                                [self](const boost::system::error_code ec, size_t) -> void { self->handle_write(ec); });
-                        delete[] response_buffer;
-                }
-
-                void handle_write(const boost::system::error_code &ec)
-                {
-                        if (ec) {
-                                std::cerr << ec.message() << std::endl;
+                        if (error_code) {
+                                BOOST_LOG_TRIVIAL(error) << "Write error: " << error_code.message();
                         } else {
-                                open(); // Read next message
+                                BOOST_LOG_TRIVIAL(debug) << "Write success, " << data->size() << " bytes.";
                         }
                 }
 
+                const common::ConnectionId f_id;
+                const std::function<void(common::Payload)> f_request_enqueue;
+                const std::function<void(common::ConnectionId)> &f_connection_fail;
                 boost::asio::ip::tcp::socket f_socket;
+                boost::asio::io_context &f_io_context;
+                std::array<unsigned char, common::protocol::Header::Size> f_header_buffer{};
+                std::vector<unsigned char> f_payload_buffer{};
         };
 } // namespace tcp
 

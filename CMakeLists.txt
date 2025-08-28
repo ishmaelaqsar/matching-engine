@@ -15,13 +15,14 @@ add_compile_definitions(RINGBUFFER_CAPACITY=${RINGBUFFER_CAPACITY})
 
 # Source file organization
 set(COMMON_HEADERS
+        src/common/types.h
+        src/common/ring_buffer.h
+        src/common/protocol/header.h
         src/common/protocol/serialize_helper.h
-        src/common/protocol/ring_buffer.h
         src/common/protocol/message.h
         src/common/protocol/view/get_book.h
         src/common/protocol/trading/add_order.h
         src/common/protocol/trading/modify_order.h
-        src/common/types.h
 )
 
 set(ORDER_BOOK_HEADERS
@@ -35,16 +36,14 @@ set(ORDER_BOOK_HEADERS
 set(TCP_HEADERS
         src/tcp/server.h
         src/tcp/connection.h
-        src/tcp/header.h
         src/tcp/client.h
-        src/tcp/handlers/trading.h
 )
 
 set(TEST_SOURCES
-        test/tcp/header_test.cpp
         test/book/level_test.cpp
         test/book/book_test.cpp
         test/helpers.h
+        test/common/protocol/header_test.cpp
         test/common/protocol/view/get_book_test.cpp
         test/common/protocol/trading/add_order_test.cpp
         test/common/protocol/trading/modify_order_test.cpp

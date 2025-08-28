@@ -39,16 +39,6 @@ namespace orderbook
                 void modify_order(Order &&order);
 
         private:
-                std::unordered_map<common::OrderId, std::shared_ptr<Order>> f_orders =
-                        std::unordered_map<common::OrderId, std::shared_ptr<Order>>();
-                std::map<common::Price, std::unique_ptr<Level>, std::greater<>> f_bids =
-                        std::map<common::Price, std::unique_ptr<Level>, std::greater<>>();
-                std::map<common::Price, std::unique_ptr<Level>, std::less<>> f_asks =
-                        std::map<common::Price, std::unique_ptr<Level>, std::less<>>();
-
-                SharedCounter<common::OrderId> f_order_counter = SharedCounter<common::OrderId>();
-                SharedCounter<common::TradeId> f_trade_counter = SharedCounter<common::TradeId>();
-
                 std::vector<Trade> add_order(const std::shared_ptr<Order> &order)
                 {
                         BOOST_LOG_TRIVIAL(info) << "Book::add_order << " << (*order);
@@ -105,6 +95,16 @@ namespace orderbook
 
                         return trades;
                 }
+
+                std::unordered_map<common::OrderId, std::shared_ptr<Order>> f_orders =
+                        std::unordered_map<common::OrderId, std::shared_ptr<Order>>();
+                std::map<common::Price, std::unique_ptr<Level>, std::greater<>> f_bids =
+                        std::map<common::Price, std::unique_ptr<Level>, std::greater<>>();
+                std::map<common::Price, std::unique_ptr<Level>, std::less<>> f_asks =
+                        std::map<common::Price, std::unique_ptr<Level>, std::less<>>();
+
+                SharedCounter<common::OrderId> f_order_counter = SharedCounter<common::OrderId>();
+                SharedCounter<common::TradeId> f_trade_counter = SharedCounter<common::TradeId>();
         };
 } // namespace orderbook
 

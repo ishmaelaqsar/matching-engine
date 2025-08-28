@@ -2,10 +2,11 @@
 #define CLIENT_H
 
 #include <boost/asio.hpp>
+#include <boost/log/trivial.hpp>
 #include <iostream>
 
+#include "../common/protocol/header.h"
 #include "../common/protocol/trading/add_order.h"
-#include "header.h"
 
 namespace tcp
 {
@@ -39,11 +40,10 @@ namespace tcp
                 {
                         if (f_connected) {
                                 boost::system::error_code ec;
-                                f_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both,
-                                                  ec); // NOLINT(*-unused-return-value)
-                                if (ec) std::cerr << ec.message() << "\n";
+                                f_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec); // NOLINT(*-unused-return-value)
+                                if (ec) BOOST_LOG_TRIVIAL(error) << ec.message();
                                 f_socket.close(ec); // NOLINT(*-unused-return-value)
-                                if (ec) std::cerr << ec.message() << "\n";
+                                if (ec) BOOST_LOG_TRIVIAL(error) << ec.message();
                                 f_connected = false;
                         }
                 }
@@ -63,11 +63,11 @@ namespace tcp
                 {
                         if (!f_connected) throw std::runtime_error("Not connected");
 
-                        const size_t buffer_size = MessageHeader::Size + request.size();
+                        const size_t buffer_size = common::protocol::Header::Size + request.size();
                         const auto buffer = new unsigned char[buffer_size];
 
-                        MessageHeader::serialize({request.type(), request.size()}, buffer);
-                        request.serialize(buffer + MessageHeader::Size);
+                        common::protocol::Header::serialize({request.type(), request.size()}, buffer);
+                        request.serialize(buffer + common::protocol::Header::Size);
 
                         f_socket.send(boost::asio::buffer(buffer, buffer_size));
                         delete[] buffer;
@@ -78,9 +78,9 @@ namespace tcp
         private:
                 common::protocol::trading::AddOrderResponse add_order_response()
                 {
-                        std::array<unsigned char, MessageHeader::Size> header_buffer{};
+                        std::array<unsigned char, common::protocol::Header::Size> header_buffer{};
                         f_socket.receive(boost::asio::buffer(header_buffer));
-                        auto [type, length] = MessageHeader::deserialize(header_buffer.data());
+                        auto [type, length] = common::protocol::Header::deserialize(header_buffer.data());
 
                         if (type != common::MessageType::AddOrderResponse) {
                                 throw std::runtime_error("Unexpected message type");

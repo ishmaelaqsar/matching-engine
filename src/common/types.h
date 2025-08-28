@@ -7,7 +7,7 @@
 namespace common
 {
         using Symbol = std::string;
-        using ConnectionId = uint32_t;
+        using ConnectionId = uint64_t;
         using OrderId = uint64_t;
         using TradeId = uint64_t;
         using Timestamp = uint64_t;

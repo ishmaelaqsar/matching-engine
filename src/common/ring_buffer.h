@@ -4,7 +4,8 @@
 #include <boost/lockfree/policies.hpp>
 #include <boost/lockfree/spsc_queue.hpp>
 
-#include "../types.h"
+#include "protocol/header.h"
+#include "types.h"
 
 namespace common
 {
@@ -16,23 +17,18 @@ namespace common
 #undef RINGBUFFER_CAPACITY
 
 #ifndef MAX_PAYLOAD_SIZE
-        #define MAX_PAYLOAD_SIZE 256
+        #define MAX_PAYLOAD_SIZE 1 << 8
 #endif
-        constexpr size_t MaxPayloadSize = MAX_PAYLOAD_SIZE;
+        constexpr size_t MaxPayloadSize = (MAX_PAYLOAD_SIZE) - sizeof(ConnectionId) - sizeof(protocol::Header::Size);
 #undef MAX_PAYLOAD_SIZE
 
-        struct RequestMessage
-        {
-                ConnectionId connectionId;
-                MessageType messageType;
-                std::array<char, MaxPayloadSize> payload;
-        };
+        using Data = std::array<unsigned char, MaxPayloadSize>;
 
-        struct ResponseMessage
+        struct Payload
         {
                 ConnectionId connectionId;
-                MessageType messageType;
-                std::array<char, MaxPayloadSize> payload;
+                protocol::Header header;
+                Data data;
         };
 } // namespace common
 

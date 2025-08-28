@@ -3,48 +3,154 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/log/trivial.hpp>
 #include <iostream>
+#include <thread>
 
+#include "../common/ring_buffer.h"
 #include "connection.h"
-
-constexpr unsigned short DefaultPort = 8080;
 
 namespace tcp
 {
-        class Server
+        class Server : public std::enable_shared_from_this<Server>
         {
         public:
-                explicit Server(boost::asio::io_context &io_context) : Server(io_context, DefaultPort)
+                explicit Server(const std::shared_ptr<common::RingBuffer<common::Payload>> &inbound_buffer,
+                                const std::shared_ptr<common::RingBuffer<common::Payload>> &outbound_buffer,
+                                boost::asio::io_context &io_context) :
+                    Server(DefaultPort, inbound_buffer, outbound_buffer, io_context)
                 {}
 
-                Server(boost::asio::io_context &io_context, const unsigned short &port) :
+                Server(const unsigned short &port,
+                       const std::shared_ptr<common::RingBuffer<common::Payload>> &inbound_buffer,
+                       const std::shared_ptr<common::RingBuffer<common::Payload>> &outbound_buffer,
+                       boost::asio::io_context &io_context) :
+                    f_acceptor(io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
                     f_io_context(io_context),
-                    f_acceptor(io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
+                    f_inbound_buffer(inbound_buffer),
+                    f_outbound_buffer(outbound_buffer)
                 {}
 
-                void start_accept()
+                void start()
                 {
-                        const auto connection = Connection::create(f_io_context);
-                        f_acceptor.async_accept(connection->socket(), [this, connection](const boost::system::error_code ec) {
-                                handle_accept(ec, connection);
+                        BOOST_LOG_TRIVIAL(info) << "Starting server on: " << f_acceptor.local_endpoint();
+                        f_running = true;
+                        accept_connections();
+                        f_polling_thread = std::thread([this]() -> void {
+                                auto empty_count = 0;
+                                while (f_running.load(std::memory_order_relaxed)) {
+                                        if (!f_outbound_buffer->empty()) {
+                                                poll_responses();
+                                                empty_count = 0;
+                                        } else {
+                                                empty_count++;
+                                                if (empty_count > 1000) {
+                                                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                                                } else {
+                                                        std::this_thread::yield();
+                                                }
+                                        }
+                                }
                         });
                 }
 
-        private:
-                void handle_accept(const boost::system::error_code &error_code,
-                                   const std::shared_ptr<Connection> &connection)
+                void stop()
                 {
-                        if (!error_code) {
-                                connection->open();
-                        } else {
-                                std::cerr << error_code.message() << std::endl;
+                        BOOST_LOG_TRIVIAL(info) << "Stopping server";
+                        f_running = false;
+                        f_acceptor.close();
+
+                        if (f_polling_thread.joinable()) {
+                                f_polling_thread.join();
                         }
 
-                        start_accept(); // Accept next connection
+                        f_connections.clear();
                 }
 
-                boost::asio::io_context &f_io_context;
+                bool is_running() const
+                {
+                        return f_running;
+                }
+
+                void queue_request(const common::Payload &request) const
+                {
+                        if (!f_inbound_buffer->push(request)) {
+                                BOOST_LOG_TRIVIAL(error) << "Inbound queue full, dropping message.";
+                        }
+                }
+
+                void queue_response(const common::Payload &response) const
+                {
+                        if (!f_outbound_buffer->push(response)) {
+                                BOOST_LOG_TRIVIAL(error) << "Outbound queue full, dropping message.";
+                        }
+                }
+
+        private:
+                void accept_connections()
+                {
+                        f_acceptor.async_accept([this](const boost::system::error_code &ec,
+                                                       boost::asio::ip::tcp::socket socket) -> void {
+                                if (!ec) {
+                                        BOOST_LOG_TRIVIAL(info) << "New connection accepted";
+
+                                        const auto connection_id = ++f_counter;
+                                        BOOST_LOG_TRIVIAL(info) << "Creating new connection, ID=" << connection_id;
+                                        const auto connection = std::make_shared<Connection>(
+                                                connection_id, f_io_context, std::move(socket),
+                                                [self = shared_from_this()](const common::Payload &payload) -> void {
+                                                        if (!self->f_inbound_buffer->push(payload)) {
+                                                                BOOST_LOG_TRIVIAL(error)
+                                                                        << "Inbound queue full, dropping message.";
+                                                        }
+                                                },
+                                                [self = shared_from_this()](const common::ConnectionId &cid) -> void {
+                                                        self->f_connections.erase(cid);
+                                                        BOOST_LOG_TRIVIAL(info) << "Removed connection, ID=" << cid;
+                                                });
+
+                                        f_connections[connection_id] = connection;
+
+                                        BOOST_LOG_TRIVIAL(info) << "Starting new connection, ID=" << connection->id();
+                                        connection->start();
+                                } else {
+                                        BOOST_LOG_TRIVIAL(error) << ec.message();
+                                }
+                                accept_connections(); // Accept next connection
+                        });
+                }
+
+                void poll_responses() const
+                {
+                        int work_left = BatchSize;
+                        common::Payload payload{};
+
+                        while (work_left-- && f_outbound_buffer->pop(payload)) {
+                                f_io_context.post([self = shared_from_this(), payload]() -> void {
+                                        if (const auto entry = self->f_connections.find(payload.connectionId);
+                                            entry != self->f_connections.end()) {
+                                                const auto connection = entry->second;
+                                                connection->write(payload.header, payload.data);
+                                        } else {
+                                                BOOST_LOG_TRIVIAL(warning)
+                                                        << "Connection " << payload.connectionId << " not found";
+                                        }
+                                });
+                        }
+                }
+
+                static constexpr unsigned short DefaultPort = 8080;
+                static constexpr size_t BatchSize = 1024;
+
+                common::ConnectionId f_counter = 0;
+                std::atomic<bool> f_running{false};
+                std::thread f_polling_thread;
+                std::unordered_map<common::ConnectionId, std::shared_ptr<Connection>> f_connections;
                 boost::asio::ip::tcp::acceptor f_acceptor;
+                boost::asio::io_context &f_io_context;
+
+                const std::shared_ptr<common::RingBuffer<common::Payload>> &f_inbound_buffer;
+                const std::shared_ptr<common::RingBuffer<common::Payload>> &f_outbound_buffer;
         };
 } // namespace tcp
 
