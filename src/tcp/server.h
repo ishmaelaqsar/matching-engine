@@ -15,9 +15,9 @@ namespace tcp
         class Server : public std::enable_shared_from_this<Server>
         {
         public:
-                explicit Server(const std::shared_ptr<common::RingBuffer<common::Payload>> &inbound_buffer,
-                                const std::shared_ptr<common::RingBuffer<common::Payload>> &outbound_buffer,
-                                boost::asio::io_context &io_context) :
+                Server(const std::shared_ptr<common::RingBuffer<common::Payload>> &inbound_buffer,
+                       const std::shared_ptr<common::RingBuffer<common::Payload>> &outbound_buffer,
+                       boost::asio::io_context &io_context) :
                     Server(DefaultPort, inbound_buffer, outbound_buffer, io_context)
                 {}
 
@@ -133,7 +133,7 @@ namespace tcp
                                                 connection->write(payload.header, payload.data);
                                         } else {
                                                 BOOST_LOG_TRIVIAL(warning)
-                                                        << "Connection " << payload.connectionId << " not found";
+                                                        << "Connection ID=" << payload.connectionId << " not found";
                                         }
                                 });
                         }

@@ -23,6 +23,7 @@ set(COMMON_HEADERS
         src/common/protocol/view/get_book.h
         src/common/protocol/trading/add_order.h
         src/common/protocol/trading/modify_order.h
+        src/common/protocol/trading/trade.h
 )
 
 set(ORDER_BOOK_HEADERS
@@ -31,6 +32,7 @@ set(ORDER_BOOK_HEADERS
         src/book/trade.h
         src/book/level.h
         src/book/shared_counter.h
+        src/book/engine.h
 )
 
 set(TCP_HEADERS
@@ -47,6 +49,8 @@ set(TEST_SOURCES
         test/common/protocol/view/get_book_test.cpp
         test/common/protocol/trading/add_order_test.cpp
         test/common/protocol/trading/modify_order_test.cpp
+        src/book/engine.h
+        src/common/protocol/trading/trade.h
 )
 
 # Create interface library for shared code

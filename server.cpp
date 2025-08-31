@@ -16,8 +16,7 @@ int main()
                 std::thread domain([&]() -> void {
                         while (server->is_running()) {
                                 try {
-                                        common::Payload payload{};
-                                        if (inbound->pop(payload)) {
+                                        if (common::Payload payload{}; inbound->pop(payload)) {
                                                 BOOST_LOG_TRIVIAL(info)
                                                         << "Received payload from connection " << payload.connectionId;
                                                 switch (payload.header.type) {

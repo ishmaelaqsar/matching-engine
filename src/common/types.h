@@ -35,19 +35,21 @@ namespace common
         enum class MessageType : uint8_t
         {
                 Unknown = 0,
-                AddOrderRequest = 1,
-                AddOrderResponse = 2,
-                ModifyOrderRequest = 3,
-                ModifyOrderResponse = 4,
-                CancelOrderRequest = 5,
-                CancelOrderResponse = 6,
-                GetBookRequest = 7,
-                GetBookResponse = 8,
+                Trade = 1,
+                AddOrderRequest = 2,
+                AddOrderResponse = 3,
+                ModifyOrderRequest = 4,
+                ModifyOrderResponse = 5,
+                CancelOrderRequest = 6,
+                CancelOrderResponse = 7,
+                GetBookRequest = 8,
+                GetBookResponse = 9,
         };
 
         inline std::ostream &operator<<(std::ostream &os, const MessageType &type)
         {
                 switch (type) {
+                        case MessageType::Trade: return os << "Trade";
                         case MessageType::AddOrderRequest: return os << "AddOrderRequest";
                         case MessageType::AddOrderResponse: return os << "AddOrderResponse";
                         case MessageType::ModifyOrderRequest: return os << "ModifyOrderRequest";

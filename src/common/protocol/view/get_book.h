@@ -1,5 +1,5 @@
-#ifndef ADD_ORDER_H
-#define ADD_ORDER_H
+#ifndef GET_BOOK_H
+#define GET_BOOK_H
 
 #include <utility>
 
@@ -9,8 +9,18 @@
 
 namespace common::protocol::view
 {
-        struct Level
+        class Level
         {
+        public:
+                Level() = default;
+
+                Level(const Price &price, const Quantity &quantity) : price(price), quantity(quantity)
+                {}
+
+                explicit Level(const std::pair<Price, Quantity> &pair) :
+                    price(std::get<0>(pair)), quantity(std::get<1>(pair))
+                {}
+
                 Price price;
                 Quantity quantity;
         };
@@ -85,6 +95,20 @@ namespace common::protocol::view
                     f_bids(bids), f_asks(asks)
                 {}
 
+                GetBookResponse(std::vector<std::pair<Price, Quantity>> bids,
+                                std::vector<std::pair<Price, Quantity>> asks)
+                {
+                        f_bids.resize(bids.size());
+                        for (auto bid: bids) {
+                                f_bids.emplace_back(std::move(bid));
+                        }
+
+                        f_asks.resize(asks.size());
+                        for (auto ask: asks) {
+                                f_asks.emplace_back(std::move(ask));
+                        }
+                }
+
                 void serialize(unsigned char *data) const override
                 {
                         size_t offset = 0;
@@ -143,4 +167,4 @@ namespace common::protocol::view
         };
 } // namespace common::protocol::view
 
-#endif // ADD_ORDER_H
+#endif // GET_BOOK_H

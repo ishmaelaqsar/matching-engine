@@ -14,6 +14,12 @@
 
 namespace orderbook
 {
+        struct Snapshot
+        {
+                std::vector<std::pair<common::Price, common::Quantity>> bids;
+                std::vector<std::pair<common::Price, common::Quantity>> asks;
+        };
+
         class Book
         {
         public:
@@ -24,12 +30,14 @@ namespace orderbook
                 Book &operator=(Book &&book) = default;
                 ~Book() = default;
 
-                std::vector<Trade> add_order(const common::Price &price, const common::Quantity &quantity,
-                                             const common::Side &side, const common::Timestamp &timestamp)
+                std::pair<common::OrderId, std::vector<Trade>> add_order(const common::Price &price,
+                                                                         const common::Quantity &quantity,
+                                                                         const common::Side &side,
+                                                                         const common::Timestamp &timestamp)
                 {
                         const auto order_id = ++f_order_counter;
                         const auto order = std::make_shared<Order>(order_id, price, quantity, side, timestamp);
-                        return add_order(order);
+                        return std::make_pair(order_id, add_order(order));
                 }
 
                 void remove_order(common::OrderId order);
@@ -37,6 +45,19 @@ namespace orderbook
                 void modify_order(const Order &order);
 
                 void modify_order(Order &&order);
+
+                Snapshot snapshot() const
+                {
+                        auto bids = std::vector<std::pair<common::Price, common::Quantity>>(f_bids.size());
+                        for (const auto &[price, level]: f_bids) {
+                                bids.emplace_back(price, level->quantity());
+                        }
+                        auto asks = std::vector<std::pair<common::Price, common::Quantity>>(f_asks.size());
+                        for (const auto &[price, level]: f_asks) {
+                                asks.emplace_back(price, level->quantity());
+                        }
+                        return Snapshot{std::move(bids), std::move(asks)};
+                }
 
         private:
                 std::vector<Trade> add_order(const std::shared_ptr<Order> &order)
@@ -96,12 +117,9 @@ namespace orderbook
                         return trades;
                 }
 
-                std::unordered_map<common::OrderId, std::shared_ptr<Order>> f_orders =
-                        std::unordered_map<common::OrderId, std::shared_ptr<Order>>();
-                std::map<common::Price, std::unique_ptr<Level>, std::greater<>> f_bids =
-                        std::map<common::Price, std::unique_ptr<Level>, std::greater<>>();
-                std::map<common::Price, std::unique_ptr<Level>, std::less<>> f_asks =
-                        std::map<common::Price, std::unique_ptr<Level>, std::less<>>();
+                std::unordered_map<common::OrderId, std::shared_ptr<Order>> f_orders{};
+                std::map<common::Price, std::unique_ptr<Level>, std::greater<>> f_bids{};
+                std::map<common::Price, std::unique_ptr<Level>, std::less<>> f_asks{};
 
                 SharedCounter<common::OrderId> f_order_counter = SharedCounter<common::OrderId>();
                 SharedCounter<common::TradeId> f_trade_counter = SharedCounter<common::TradeId>();
