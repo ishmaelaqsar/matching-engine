@@ -48,11 +48,13 @@ namespace orderbook
 
                 Snapshot snapshot() const
                 {
-                        auto bids = std::vector<std::pair<common::Price, common::Quantity>>(f_bids.size());
+                        auto bids = std::vector<std::pair<common::Price, common::Quantity>>{};
+                        bids.reserve(f_bids.size());
                         for (const auto &[price, level]: f_bids) {
                                 bids.emplace_back(price, level->quantity());
                         }
-                        auto asks = std::vector<std::pair<common::Price, common::Quantity>>(f_asks.size());
+                        auto asks = std::vector<std::pair<common::Price, common::Quantity>>{};
+                        asks.reserve(f_asks.size());
                         for (const auto &[price, level]: f_asks) {
                                 asks.emplace_back(price, level->quantity());
                         }
@@ -60,31 +62,32 @@ namespace orderbook
                 }
 
         private:
+                static bool buy_check(const common::Price level_price, const common::Price order_price)
+                {
+                        return level_price <= order_price;
+                }
+
+                static bool sell_check(const common::Price level_price, const common::Price order_price)
+                {
+                        return level_price >= order_price;
+                }
+
                 std::vector<Trade> add_order(const std::shared_ptr<Order> &order)
                 {
                         BOOST_LOG_TRIVIAL(info) << "Book::add_order << " << (*order);
+
                         std::vector<Trade> trades = order->side() == common::Side::Buy
-                                                            ? match(order, f_bids, f_asks,
-                                                                    [](const common::Price level_price,
-                                                                       const common::Price order_price) -> bool {
-                                                                            if (level_price <= order_price) return true;
-                                                                            return false;
-                                                                    })
-                                                            : match(order, f_asks, f_bids,
-                                                                    [](const common::Price level_price,
-                                                                       const common::Price order_price) -> bool {
-                                                                            if (level_price >= order_price) return true;
-                                                                            return false;
-                                                                    });
+                                                            ? match(order, f_bids, f_asks, buy_check)
+                                                            : match(order, f_asks, f_bids, sell_check);
 
                         return trades;
                 }
 
-                template<typename Compare1, typename Compare2>
+                template<typename Compare1, typename Compare2, typename PriceCheck>
                 std::vector<Trade> match(const std::shared_ptr<Order> &order,
                                          std::map<common::Price, std::unique_ptr<Level>, Compare1> &levels,
                                          std::map<common::Price, std::unique_ptr<Level>, Compare2> &opposite_levels,
-                                         const std::function<bool(common::Price, common::Price)> &price_check)
+                                         PriceCheck price_check)
                 {
                         std::vector<Trade> trades{};
 
@@ -94,7 +97,10 @@ namespace orderbook
                                 }
                                 auto &level = it->second;
                                 BOOST_LOG_TRIVIAL(info) << "Book::match << " << (*order) << " <-> " << (*level);
-                                const auto level_trades = level->match_order(order);
+                                const auto level_trades =
+                                        level->match_order(order, [this](const common::OrderId &order_id) -> void {
+                                                f_orders.erase(order_id);
+                                        });
                                 trades.insert(trades.end(), std::make_move_iterator(level_trades.begin()),
                                               std::make_move_iterator(level_trades.end()));
                                 if (level->empty()) {

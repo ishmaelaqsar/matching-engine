@@ -1,5 +1,5 @@
-#ifndef GET_BOOK_H
-#define GET_BOOK_H
+#ifndef PROTOCOL_GET_BOOK_H
+#define PROTOCOL_GET_BOOK_H
 
 #include <utility>
 
@@ -21,11 +21,19 @@ namespace common::protocol::view
                     price(std::get<0>(pair)), quantity(std::get<1>(pair))
                 {}
 
+                std::ostream &operator<<(std::ostream &os) const
+                {
+                        os << "Level{";
+                        os << "price: " << price << ", quantity: " << quantity;
+                        os << "}";
+                        return os;
+                }
+
                 Price price;
                 Quantity quantity;
         };
 
-        class GetBookRequest final : Message
+        class GetBookRequest final : public Message
         {
         public:
                 GetBookRequest() = default;
@@ -38,16 +46,23 @@ namespace common::protocol::view
                 explicit GetBookRequest(Symbol symbol) : f_symbol(std::move(symbol))
                 {}
 
-                void serialize(unsigned char *data) const override
+                void serialize(unsigned char *dst) const override
                 {
                         size_t offset = 0;
-                        serialize_string(f_symbol, data, &offset);
+                        serialize_string(f_symbol, dst, &offset);
                 }
 
-                void deserialize(unsigned const char *data) override
+                void deserialize(unsigned const char *src) override
                 {
                         size_t offset = 0;
-                        f_symbol = deserialize_string(data, &offset);
+                        f_symbol = deserialize_string(src, &offset);
+                }
+
+                void print(std::ostream &os) const override
+                {
+                        os << "GetBookRequest{";
+                        os << "symbol: " << f_symbol;
+                        os << "}";
                 }
 
                 [[nodiscard]] size_t size() const override
@@ -65,19 +80,11 @@ namespace common::protocol::view
                         return f_symbol;
                 }
 
-                friend std::ostream &operator<<(std::ostream &os, const GetBookRequest &request)
-                {
-                        os << "GetBookRequest{";
-                        os << "symbol: " << request.f_symbol;
-                        os << "}";
-                        return os;
-                }
-
         private:
                 Symbol f_symbol{};
         };
 
-        class GetBookResponse final : Message
+        class GetBookResponse final : public Message
         {
         public:
                 GetBookResponse() = default;
@@ -95,50 +102,64 @@ namespace common::protocol::view
                     f_bids(bids), f_asks(asks)
                 {}
 
-                GetBookResponse(std::vector<std::pair<Price, Quantity>> bids,
-                                std::vector<std::pair<Price, Quantity>> asks)
+                GetBookResponse(std::vector<std::pair<Price, Quantity>> &&bids,
+                                std::vector<std::pair<Price, Quantity>> &&asks)
                 {
-                        f_bids.resize(bids.size());
+                        f_bids.reserve(bids.size());
                         for (auto bid: bids) {
                                 f_bids.emplace_back(std::move(bid));
                         }
 
-                        f_asks.resize(asks.size());
+                        f_asks.reserve(asks.size());
                         for (auto ask: asks) {
                                 f_asks.emplace_back(std::move(ask));
                         }
                 }
 
-                void serialize(unsigned char *data) const override
+                void serialize(unsigned char *dst) const override
                 {
                         size_t offset = 0;
 
-                        serialize_uint8(static_cast<uint8_t>(f_bids.size()), data, &offset);
+                        serialize_uint8(static_cast<uint8_t>(f_bids.size()), dst, &offset);
                         for (const auto &bid: f_bids) {
-                                serialize_struct(bid, data, &offset);
+                                serialize_struct(bid, dst, &offset);
                         }
 
-                        serialize_uint8(static_cast<uint8_t>(f_asks.size()), data, &offset);
+                        serialize_uint8(static_cast<uint8_t>(f_asks.size()), dst, &offset);
                         for (const auto &ask: f_asks) {
-                                serialize_struct(ask, data, &offset);
+                                serialize_struct(ask, dst, &offset);
                         }
                 }
 
-                void deserialize(const unsigned char *data) override
+                void deserialize(const unsigned char *src) override
                 {
                         size_t offset = 0;
 
-                        const size_t num_bids = deserialize_uint8(data, &offset);
+                        const size_t num_bids = deserialize_uint8(src, &offset);
                         f_bids = std::vector<Level>(num_bids);
                         for (size_t i = 0; i < num_bids; i++) {
-                                f_bids[i] = deserialize_struct<Level>(data, &offset);
+                                f_bids[i] = deserialize_struct<Level>(src, &offset);
                         }
 
-                        const size_t num_asks = deserialize_uint8(data, &offset);
+                        const size_t num_asks = deserialize_uint8(src, &offset);
                         f_asks = std::vector<Level>(num_asks);
                         for (size_t i = 0; i < num_asks; i++) {
-                                f_asks[i] = deserialize_struct<Level>(data, &offset);
+                                f_asks[i] = deserialize_struct<Level>(src, &offset);
                         }
+                }
+
+                void print(std::ostream &os) const override
+                {
+                        os << "GetBookResponse{";
+                        os << "bids: [";
+                        for (const auto bid: f_bids) {
+                                bid.operator<<(os) << ", ";
+                        }
+                        os << "], asks: [";
+                        for (const auto ask: f_asks) {
+                                ask.operator<<(os) << ", ";
+                        }
+                        os << "]}";
                 }
 
                 [[nodiscard]] size_t size() const override
@@ -167,4 +188,4 @@ namespace common::protocol::view
         };
 } // namespace common::protocol::view
 
-#endif // GET_BOOK_H
+#endif // PROTOCOL_GET_BOOK_H

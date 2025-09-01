@@ -1,5 +1,5 @@
-#ifndef ADD_ORDER_H
-#define ADD_ORDER_H
+#ifndef PROTOCOL_ADD_ORDER_H
+#define PROTOCOL_ADD_ORDER_H
 
 #include <utility>
 
@@ -9,7 +9,7 @@
 
 namespace common::protocol::trading
 {
-        class AddOrderRequest final : Message
+        class AddOrderRequest final : public Message
         {
         public:
                 AddOrderRequest() = default;
@@ -23,22 +23,32 @@ namespace common::protocol::trading
                     f_symbol(std::move(symbol)), f_price(price), f_quantity(quantity), f_side(side)
                 {}
 
-                void serialize(unsigned char *data) const override
+                void serialize(unsigned char *dst) const override
                 {
                         size_t offset = 0;
-                        serialize_string(f_symbol, data, &offset);
-                        serialize_uint64(f_price, data, &offset);
-                        serialize_uint64(f_quantity, data, &offset);
-                        serialize_uint8(static_cast<uint8_t>(f_side), data, &offset);
+                        serialize_string(f_symbol, dst, &offset);
+                        serialize_uint64(f_price, dst, &offset);
+                        serialize_uint64(f_quantity, dst, &offset);
+                        serialize_uint8(static_cast<uint8_t>(f_side), dst, &offset);
                 }
 
-                void deserialize(const unsigned char *data) override
+                void deserialize(const unsigned char *src) override
                 {
                         size_t offset = 0;
-                        f_symbol = deserialize_string(data, &offset);
-                        f_price = deserialize_uint64(data, &offset);
-                        f_quantity = deserialize_uint64(data, &offset);
-                        f_side = static_cast<Side>(deserialize_uint8(data, &offset));
+                        f_symbol = deserialize_string(src, &offset);
+                        f_price = deserialize_uint64(src, &offset);
+                        f_quantity = deserialize_uint64(src, &offset);
+                        f_side = static_cast<Side>(deserialize_uint8(src, &offset));
+                }
+
+                void print(std::ostream &os) const override
+                {
+                        os << "AddOrderRequest{";
+                        os << "symbol: " << f_symbol << ", ";
+                        os << "price: " << f_price << ", ";
+                        os << "quantity: " << f_quantity << ", ";
+                        os << "side: " << f_side;
+                        os << "}";
                 }
 
                 [[nodiscard]] size_t size() const override
@@ -71,17 +81,6 @@ namespace common::protocol::trading
                         return f_side;
                 }
 
-                friend std::ostream &operator<<(std::ostream &os, const AddOrderRequest &request)
-                {
-                        os << "AddOrderRequest{";
-                        os << "symbol: " << request.f_symbol << ", ";
-                        os << "price: " << request.f_price << ", ";
-                        os << "quantity: " << request.f_quantity << ", ";
-                        os << "side: " << request.f_side;
-                        os << "}";
-                        return os;
-                }
-
         private:
                 Symbol f_symbol{};
                 Price f_price{};
@@ -89,7 +88,7 @@ namespace common::protocol::trading
                 Side f_side = Side::Unknown;
         };
 
-        class AddOrderResponse final : Message
+        class AddOrderResponse final : public Message
         {
         public:
                 AddOrderResponse() = default;
@@ -103,18 +102,26 @@ namespace common::protocol::trading
                     f_order_id(order_id), f_timestamp(timestamp)
                 {}
 
-                void serialize(unsigned char *data) const override
+                void serialize(unsigned char *dst) const override
                 {
                         size_t offset = 0;
-                        serialize_uint64(f_order_id, data, &offset);
-                        serialize_uint64(f_timestamp, data, &offset);
+                        serialize_uint64(f_order_id, dst, &offset);
+                        serialize_uint64(f_timestamp, dst, &offset);
                 }
 
-                void deserialize(const unsigned char *data) override
+                void deserialize(const unsigned char *src) override
                 {
                         size_t offset = 0;
-                        f_order_id = deserialize_uint64(data, &offset);
-                        f_timestamp = deserialize_uint64(data, &offset);
+                        f_order_id = deserialize_uint64(src, &offset);
+                        f_timestamp = deserialize_uint64(src, &offset);
+                }
+
+                void print(std::ostream &os) const override
+                {
+                        os << "AddOrderResponse{";
+                        os << "order_id: " << f_order_id << ", ";
+                        os << "timestamp: " << f_timestamp;
+                        os << "}";
                 }
 
                 [[nodiscard]] size_t size() const override
@@ -137,19 +144,10 @@ namespace common::protocol::trading
                         return f_timestamp;
                 }
 
-                friend std::ostream &operator<<(std::ostream &os, const AddOrderResponse &response)
-                {
-                        os << "AddOrderResponse{";
-                        os << "order_id: " << response.f_order_id << ", ";
-                        os << "timestamp: " << response.f_timestamp;
-                        os << "}";
-                        return os;
-                }
-
         private:
                 OrderId f_order_id{};
                 Timestamp f_timestamp{};
         };
 } // namespace common::protocol::trading
 
-#endif // ADD_ORDER_H
+#endif // PROTOCOL_ADD_ORDER_H

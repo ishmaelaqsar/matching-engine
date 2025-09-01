@@ -1,7 +1,5 @@
-#ifndef TRADE_H
-#define TRADE_H
-
-#include <vector>
+#ifndef PROTOCOL_TRADE_H
+#define PROTOCOL_TRADE_H
 
 #include "common/protocol/message.h"
 #include "common/protocol/serialize_helper.h"
@@ -9,7 +7,7 @@
 
 namespace common::protocol::trading
 {
-        class Trade final : Message
+        class Trade final : public Message
         {
         public:
                 Trade() = default;
@@ -29,26 +27,38 @@ namespace common::protocol::trading
                     f_matched_order(matched_order)
                 {}
 
-                void serialize(unsigned char *data) const override
+                void serialize(unsigned char *dst) const override
                 {
                         size_t offset = 0;
-                        serialize_uint64(f_id, data, &offset);
-                        serialize_uint64(f_price, data, &offset);
-                        serialize_uint64(f_quantity, data, &offset);
-                        serialize_uint64(f_timestamp, data, &offset);
-                        serialize_uint64(f_source_order, data, &offset);
-                        serialize_uint64(f_matched_order, data, &offset);
+                        serialize_uint64(f_id, dst, &offset);
+                        serialize_uint64(f_price, dst, &offset);
+                        serialize_uint64(f_quantity, dst, &offset);
+                        serialize_uint64(f_timestamp, dst, &offset);
+                        serialize_uint64(f_source_order, dst, &offset);
+                        serialize_uint64(f_matched_order, dst, &offset);
                 }
 
-                void deserialize(const unsigned char *data) override
+                void deserialize(const unsigned char *src) override
                 {
                         size_t offset = 0;
-                        f_id = deserialize_uint64(data, &offset);
-                        f_price = deserialize_uint64(data, &offset);
-                        f_quantity = deserialize_uint64(data, &offset);
-                        f_timestamp = deserialize_uint64(data, &offset);
-                        f_source_order = deserialize_uint64(data, &offset);
-                        f_matched_order = deserialize_uint64(data, &offset);
+                        f_id = deserialize_uint64(src, &offset);
+                        f_price = deserialize_uint64(src, &offset);
+                        f_quantity = deserialize_uint64(src, &offset);
+                        f_timestamp = deserialize_uint64(src, &offset);
+                        f_source_order = deserialize_uint64(src, &offset);
+                        f_matched_order = deserialize_uint64(src, &offset);
+                }
+
+                void print(std::ostream &os) const override
+                {
+                        os << "Trade{";
+                        os << "id: " << f_id << ", ";
+                        os << "price: " << f_price << ", ";
+                        os << "quantity: " << f_quantity << ", ";
+                        os << "timestamp: " << f_timestamp << ", ";
+                        os << "source_order: " << f_source_order << ", ";
+                        os << "matched_order: " << f_matched_order;
+                        os << "}";
                 }
 
                 [[nodiscard]] size_t size() const override
@@ -92,19 +102,6 @@ namespace common::protocol::trading
                         return f_matched_order;
                 }
 
-                friend std::ostream &operator<<(std::ostream &os, const Trade &request)
-                {
-                        os << "Trade{";
-                        os << "id: " << request.f_id << ", ";
-                        os << "price: " << request.f_price << ", ";
-                        os << "quantity: " << request.f_quantity << ", ";
-                        os << "timestamp: " << request.f_timestamp << ", ";
-                        os << "source_order: " << request.f_source_order << ", ";
-                        os << "matched_order: " << request.f_matched_order;
-                        os << "}";
-                        return os;
-                }
-
         private:
                 TradeId f_id{};
                 Price f_price{};
@@ -113,39 +110,6 @@ namespace common::protocol::trading
                 OrderId f_source_order{};
                 OrderId f_matched_order{};
         };
-
-        class Trades final : Message
-        {
-        public:
-                Trades() = default;
-                Trades(const Trades &trades) = default;
-                Trades(Trades &&trades) = default;
-                Trades &operator=(const Trades &trades) = default;
-                Trades &operator=(Trades &&trades) = default;
-                ~Trades() override = default;
-
-                Trades(const std::initializer_list<Trade> init) : f_trades(init)
-                {}
-
-                void serialize(unsigned char *dst) const override;
-
-                void deserialize(const unsigned char *src) override;
-
-                [[nodiscard]] size_t size() const override;
-
-                [[nodiscard]] MessageType type() const override
-                {
-                        return MessageType::Trade;
-                }
-
-                [[nodiscard]] std::vector<Trade> trades() const
-                {
-                        return f_trades;
-                }
-
-        private:
-                std::vector<Trade> f_trades{};
-        };
 } // namespace common::protocol::trading
 
-#endif // TRADE_H
+#endif // PROTOCOL_TRADE_H

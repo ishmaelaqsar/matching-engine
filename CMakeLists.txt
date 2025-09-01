@@ -88,13 +88,6 @@ add_executable(matching_engine
 )
 target_link_libraries(matching_engine PRIVATE matching_engine_lib)
 
-add_executable(tcp_server
-        server.cpp
-        ${COMMON_HEADERS}
-        ${TCP_HEADERS}
-)
-target_link_libraries(tcp_server PRIVATE matching_engine_lib)
-
 add_executable(tcp_client
         client.cpp
         ${COMMON_HEADERS}
@@ -143,7 +136,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # Installation rules
-install(TARGETS matching_engine tcp_server tcp_client
+install(TARGETS matching_engine tcp_client
         RUNTIME DESTINATION bin
 )
 

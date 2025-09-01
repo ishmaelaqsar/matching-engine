@@ -1,10 +1,69 @@
+#include <algorithm>
 #include <boost/log/trivial.hpp>
 #include <iostream>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
 
-#include "src/common/protocol/trading/add_order.h"
-#include "src/tcp/client.h"
+#include "common/protocol/trading/add_order.h"
+#include "common/protocol/view/get_book.h"
+#include "tcp/client.h"
 
-common::protocol::trading::AddOrderRequest parse_line(std::string &line);
+common::protocol::view::GetBookRequest get_book_request(const std::string_view line)
+{
+        std::istringstream iss{std::string(line)};
+        std::string symbol;
+        if (!(iss >> symbol)) {
+                throw std::invalid_argument("missing symbol in: " + std::string(line));
+        }
+        return common::protocol::view::GetBookRequest(std::move(symbol));
+}
+
+common::protocol::trading::AddOrderRequest add_order_request(const std::string_view line)
+{
+        std::istringstream iss{std::string(line)};
+        std::string symbol;
+        uint64_t price, quantity, raw_side;
+
+        if (!(iss >> symbol >> price >> quantity >> raw_side)) {
+                throw std::invalid_argument("invalid add order input: " + std::string(line));
+        }
+
+        common::Side side;
+        switch (raw_side) {
+                case 1: side = common::Side::Buy; break;
+                case 2: side = common::Side::Sell; break;
+                default: throw std::invalid_argument("invalid side: " + std::to_string(raw_side));
+        }
+
+        return {std::move(symbol), price, quantity, side};
+}
+
+std::unique_ptr<common::protocol::Message> parse_line(std::string_view line)
+{
+        std::istringstream iss{std::string(line)};
+        std::string type;
+        if (!(iss >> type)) {
+                throw std::invalid_argument("empty request line");
+        }
+
+        std::transform(type.begin(), type.end(), type.begin(), [](unsigned char c) { return std::tolower(c); });
+
+        std::string rest;
+        std::getline(iss, rest);
+        if (!rest.empty() && rest.front() == ' ') rest.erase(0, 1);
+
+        if (type == "get") {
+                return std::make_unique<common::protocol::view::GetBookRequest>(get_book_request(rest));
+        }
+        if (type == "add") {
+                return std::make_unique<common::protocol::trading::AddOrderRequest>(add_order_request(rest));
+        }
+
+        throw std::invalid_argument("unknown request type: " + type);
+}
 
 int main()
 {
@@ -18,46 +77,13 @@ int main()
                         std::getline(std::cin, line);
                         if (line == "q") break;
 
-                        const auto request = parse_line(line);
+                        std::unique_ptr<common::protocol::Message> request = parse_line(line);
 
-                        const auto response = client.add_order(request);
-                        BOOST_LOG_TRIVIAL(info)
-                                << "Order ID: " << response.order_id() << ", Timestamp: " << response.timestamp();
+                        std::shared_ptr<common::protocol::Message> response = client.request(request);
+                        BOOST_LOG_TRIVIAL(info) << "Response: " << *response;
                 }
                 client.disconnect();
         } catch (const std::exception &e) {
                 BOOST_LOG_TRIVIAL(error) << "Error: " << e.what();
         }
-}
-
-common::protocol::trading::AddOrderRequest parse_line(std::string &line)
-{
-        const auto symbol_position = line.find(' ', 0);
-        if (symbol_position == std::string::npos) {
-                throw std::invalid_argument("1: invalid input: " + line);
-        }
-
-        const auto price_position = line.find(' ', symbol_position + 1);
-        if (price_position == std::string::npos) {
-                throw std::invalid_argument("2: invalid input: " + line);
-        }
-
-        const auto quantity_position = line.find(' ', price_position + 1);
-        if (quantity_position == std::string::npos) {
-                throw std::invalid_argument("3: invalid input: " + line);
-        }
-
-        const auto symbol = std::string(&line[0], &line[symbol_position]);
-        const uint64_t price = std::stoull(std::string(&line[symbol_position + 1], &line[price_position]));
-        const uint64_t quantity = std::stoull(std::string(&line[price_position + 1], &line[quantity_position]));
-        const uint8_t raw_side = static_cast<uint8_t>(std::stoull(std::string(&line[quantity_position + 1])));
-
-        common::Side side;
-        switch (raw_side) {
-                case 1: side = common::Side::Buy; break;
-                case 2: side = common::Side::Sell; break;
-                default: throw std::invalid_argument("invalid side: " + std::to_string(raw_side));
-        }
-
-        return {symbol, price, quantity, side};
 }
