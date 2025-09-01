@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "../../src/book/book.h"
-#include "../../src/common/types.h"
+#include "../../include/core/types.h"
+#include "../../include/orderbook/book.h"
 
 using namespace orderbook;
 using namespace common;
@@ -12,7 +12,7 @@ TEST(BookTest, BookTrades)
 
         // 0 | 0
 
-        // buy 10@100 in an empty book
+        // buy 10@100 in an empty orderbook
         {
                 const auto trades = book.add_order(100, 10, Side::Buy, 1);
                 ASSERT_TRUE(trades.empty());

@@ -1,10 +1,9 @@
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
 
 #include <iostream>
 #include <string>
 
-namespace common
+namespace core
 {
         using Symbol = std::string;
         using ConnectionId = uint64_t;
@@ -31,6 +30,4 @@ namespace common
                         default: return os << "Unknown";
                 }
         }
-} // namespace common
-
-#endif // TYPES_H
+} // namespace core

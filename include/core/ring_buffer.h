@@ -1,13 +1,11 @@
-#ifndef RING_BUFFER_H
-#define RING_BUFFER_H
+#pragma once
 
 #include <boost/lockfree/policies.hpp>
 #include <boost/lockfree/spsc_queue.hpp>
 
-#include "protocol/header.h"
-#include "types.h"
+#include "core/protocol/header.h"
 
-namespace common
+namespace core
 {
 #ifndef RINGBUFFER_CAPACITY
         #define RINGBUFFER_CAPACITY 1024
@@ -30,6 +28,4 @@ namespace common
                 protocol::Header header;
                 Data data;
         };
-} // namespace common
-
-#endif // RING_BUFFER_H
+} // namespace core

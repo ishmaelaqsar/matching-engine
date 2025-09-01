@@ -3,8 +3,8 @@
 
 #include <gtest/gtest.h>
 
-#include "../src/book/order.h"
-#include "../src/common/types.h"
+#include "../include/core/types.h"
+#include "../src/orderbook/order.h"
 
 using namespace orderbook;
 using namespace common;

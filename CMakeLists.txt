@@ -13,107 +13,116 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(RINGBUFFER_CAPACITY 4096 CACHE STRING "Ring buffer capacity")
 add_compile_definitions(RINGBUFFER_CAPACITY=${RINGBUFFER_CAPACITY})
 
-# Source file organization
-set(COMMON_HEADERS
-        src/common/types.h
-        src/common/ring_buffer.h
-        src/common/protocol/header.h
-        src/common/protocol/serialize_helper.h
-        src/common/protocol/message.h
-        src/common/protocol/view/get_book.h
-        src/common/protocol/trading/add_order.h
-        src/common/protocol/trading/modify_order.h
-        src/common/protocol/trading/trade.h
-)
+# -------------------------------------------------------------
+# Collect sources
 
+set(CORE_HEADERS
+        include/core/types.h
+        include/core/ring_buffer.h
+        include/core/protocol/header.h
+        include/core/protocol/serialize_helper.h
+        include/core/protocol/message.h
+        include/core/protocol/view/get_book.h
+        include/core/protocol/trading/add_order.h
+        include/core/protocol/trading/modify_order.h
+        include/core/protocol/trading/trade.h
+)
 set(ORDER_BOOK_HEADERS
-        src/book/book.h
-        src/book/order.h
-        src/book/trade.h
-        src/book/level.h
-        src/book/shared_counter.h
-        src/book/engine.h
+        include/orderbook/book.h
+        include/orderbook/engine.h
+        include/orderbook/level.h
+        include/orderbook/order.h
+        include/orderbook/shared_counter.h
+        include/orderbook/trade.h
 )
-
 set(TCP_HEADERS
-        src/tcp/server.h
-        src/tcp/connection.h
-        src/tcp/client.h
+        include/tcp/client.h
+        include/tcp/connection.h
+        include/tcp/server.h
 )
 
-set(TEST_SOURCES
-        test/book/level_test.cpp
-        test/book/book_test.cpp
-        test/helpers.h
-        test/common/protocol/header_test.cpp
-        test/common/protocol/view/get_book_test.cpp
-        test/common/protocol/trading/add_order_test.cpp
-        test/common/protocol/trading/modify_order_test.cpp
-        src/book/engine.h
-        src/common/protocol/trading/trade.h
+set(CORE_SOURCES
+        src/core/protocol/message.cpp
+        src/core/protocol/trading/add_order.cpp
+        src/core/protocol/trading/modify_order.cpp
+        src/core/protocol/trading/trade.cpp
+        src/core/protocol/view/get_book.cpp
+        src/core/protocol/header.cpp
+)
+set(ORDER_BOOK_SOURCES
+        src/orderbook/book.cpp
+        src/orderbook/order.cpp
+        src/orderbook/trade.cpp
+        src/orderbook/engine.cpp
+)
+set(TCP_SOURCES
+        src/tcp/client.cpp
+        src/tcp/connection.cpp
+        src/tcp/server.cpp
 )
 
-# Create interface library for shared code
-add_library(matching_engine_lib INTERFACE)
-target_include_directories(matching_engine_lib INTERFACE src/)
+file(GLOB_RECURSE TEST_SOURCES test/*)
+
+# -------------------------------------------------------------
+# Core library
+add_library(matching_engine_lib
+        ${CORE_HEADERS}
+        ${ORDER_BOOK_HEADERS}
+        ${TCP_HEADERS}
+        ${CORE_SOURCES}
+        ${ORDER_BOOK_SOURCES}
+        ${TCP_SOURCES}
+)
+
+target_include_directories(matching_engine_lib
+        PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+)
 
 # Dependencies
 find_package(Boost REQUIRED COMPONENTS log log_setup system thread)
 
-# Link Boost to the interface library so all targets get it
-target_link_libraries(matching_engine_lib INTERFACE
+target_link_libraries(matching_engine_lib
+        PUBLIC
         ${Boost_LIBRARIES}
 )
-target_include_directories(matching_engine_lib INTERFACE
-        ${Boost_INCLUDE_DIRS}
-)
-target_compile_definitions(matching_engine_lib INTERFACE
-        BOOST_LOG_DYN_LINK
+
+target_compile_definitions(matching_engine_lib
+        PUBLIC BOOST_LOG_DYN_LINK
 )
 
 # Compiler warnings
 if(MSVC)
-    target_compile_options(matching_engine_lib INTERFACE /W4 /permissive-)
+    target_compile_options(matching_engine_lib PRIVATE /W4 /permissive-)
 else()
-    target_compile_options(matching_engine_lib INTERFACE
+    target_compile_options(matching_engine_lib PRIVATE
             -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion
     )
 endif()
 
+# -------------------------------------------------------------
 # Main executables
-add_executable(matching_engine
-        main.cpp
-        ${COMMON_HEADERS}
-        ${ORDER_BOOK_HEADERS}
-)
+add_executable(matching_engine main.cpp)
 target_link_libraries(matching_engine PRIVATE matching_engine_lib)
 
-add_executable(tcp_client
-        client.cpp
-        ${COMMON_HEADERS}
-        ${TCP_HEADERS}
-)
+add_executable(tcp_client client.cpp)
 target_link_libraries(tcp_client PRIVATE matching_engine_lib)
 
+# -------------------------------------------------------------
 # Testing setup
 include(FetchContent)
 FetchContent_Declare(
         googletest
         URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
-
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-# Test executable
 add_executable(matching_engine_test
-        ${COMMON_HEADERS}
-        ${ORDER_BOOK_HEADERS}
         ${TEST_SOURCES}
 )
-
 target_link_libraries(matching_engine_test PRIVATE
         matching_engine_lib
         GTest::gtest_main
@@ -122,6 +131,7 @@ target_link_libraries(matching_engine_test PRIVATE
 include(GoogleTest)
 gtest_discover_tests(matching_engine_test)
 
+# -------------------------------------------------------------
 # Build type configuration
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
@@ -131,22 +141,22 @@ endif()
 # Optional: Add debug symbols in Release mode
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     if(NOT MSVC)
-        target_compile_options(matching_engine_lib INTERFACE -g)
+        target_compile_options(matching_engine_lib PRIVATE -g)
     endif()
 endif()
 
+# -------------------------------------------------------------
 # Installation rules
 install(TARGETS matching_engine tcp_client
         RUNTIME DESTINATION bin
 )
 
-# Optional: Install headers for library usage
-install(DIRECTORY src/
+install(DIRECTORY include/
         DESTINATION include/matching_engine
         FILES_MATCHING PATTERN "*.h"
 )
 
-# Optional: Package configuration
+# Package configuration
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/matching_engine-config-version.cmake"
@@ -156,7 +166,6 @@ write_basic_package_version_file(
 
 # Optional: CTest configuration
 if(BUILD_TESTING)
-    # Add custom test configurations here
     set_tests_properties(matching_engine_test PROPERTIES
             TIMEOUT 30
     )

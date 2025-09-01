@@ -1,14 +1,12 @@
-#ifndef SERIALIZE_HELPER_H
-#define SERIALIZE_HELPER_H
+#pragma once
 
 #include <cstring>
 #include <limits>
 #include <netinet/in.h>
+#include <stdexcept>
 #include <string>
 
-#include "../types.h"
-
-namespace common
+namespace core::protocol
 {
         static void serialize_string(const std::string &str, unsigned char *dst, size_t *offset)
         {
@@ -110,6 +108,4 @@ namespace common
                 *offset += sizeof(t);
                 return t;
         }
-} // namespace common
-
-#endif // SERIALIZE_HELPER_H
+} // namespace core::protocol

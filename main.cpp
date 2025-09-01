@@ -1,12 +1,13 @@
+#include <boost/asio/io_context.hpp>
 #include <boost/log/trivial.hpp>
 
-#include "book/engine.h"
-#include "src/tcp/server.h"
+#include "orderbook/engine.h"
+#include "tcp/server.h"
 
 int main()
 {
-        const auto inbound = std::make_shared<common::RingBuffer<common::Payload>>();
-        const auto outbound = std::make_shared<common::RingBuffer<common::Payload>>();
+        const auto inbound = std::make_shared<core::RingBuffer<core::Payload>>();
+        const auto outbound = std::make_shared<core::RingBuffer<core::Payload>>();
         try {
                 boost::asio::io_context io_context;
                 const auto server = std::make_shared<tcp::Server>(inbound, outbound, io_context);

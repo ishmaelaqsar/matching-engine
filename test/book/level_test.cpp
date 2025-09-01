@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "../../src/book/level.h"
-#include "../../src/common/types.h"
+#include "../../include/core/types.h"
+#include "../../src/orderbook/level.h"
 #include "../helpers.h"
 
 using namespace orderbook;
