@@ -4,9 +4,9 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <thread>
 
-#include "core/ring_buffer.h"
-#include "core/types.h"
-#include "tcp/connection.h"
+#include <core/ring_buffer.h>
+#include <core/types.h>
+#include <tcp/connection.h>
 
 namespace tcp
 {

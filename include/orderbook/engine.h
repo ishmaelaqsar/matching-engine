@@ -3,9 +3,9 @@
 #include <thread>
 #include <unordered_map>
 
-#include "core/ring_buffer.h"
-#include "core/types.h"
-#include "orderbook/book.h"
+#include <core/ring_buffer.h>
+#include <core/types.h>
+#include <orderbook/book.h>
 
 namespace orderbook
 {
@@ -46,7 +46,7 @@ namespace orderbook
                 }
 
                 void handle_get_book_request(const core::Payload &payload);
-                void handle_add_order_request(core::Payload &payload, core::Timestamp timestamp);
+                void handle_add_order_request(const core::Payload &payload, core::Timestamp timestamp);
 
                 std::unordered_map<core::Symbol, std::unique_ptr<Book>> f_order_books{};
                 const std::shared_ptr<core::RingBuffer<core::Payload>> &f_inbound_buffer;

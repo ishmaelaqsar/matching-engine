@@ -1,12 +1,11 @@
 #include <iostream>
 
-#include "core/protocol/trading/add_order.h"
-#include "core/protocol/serialize_helper.h"
+#include <core/protocol/serialize_helper.h>
+#include <core/protocol/trading/add_order.h>
 
 namespace core::protocol::trading
 {
-        AddOrderRequest::AddOrderRequest(Symbol symbol, const Price price, const Quantity quantity,
-                                                const Side side) :
+        AddOrderRequest::AddOrderRequest(Symbol symbol, const Price price, const Quantity quantity, const Side side) :
             f_symbol(std::move(symbol)), f_price(price), f_quantity(quantity), f_side(side)
         {}
 

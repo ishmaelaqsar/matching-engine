@@ -1,11 +1,11 @@
 #include <boost/chrono.hpp>
 #include <boost/log/trivial.hpp>
 
-#include "core/protocol/message.h"
-#include "core/protocol/trading/add_order.h"
-#include "core/protocol/trading/trade.h"
-#include "core/protocol/view/get_book.h"
-#include "orderbook/engine.h"
+#include <core/protocol/message.h>
+#include <core/protocol/trading/add_order.h>
+#include <core/protocol/trading/trade.h>
+#include <core/protocol/view/get_book.h>
+#include <orderbook/engine.h>
 
 namespace orderbook
 {
@@ -56,6 +56,8 @@ namespace orderbook
         {
                 const auto request = deserialize<core::protocol::view::GetBookRequest>(payload);
 
+                BOOST_LOG_TRIVIAL(debug) << "Connection ID=" << payload.connectionId << ", " << request;
+
                 const auto &book = get_book(request.symbol());
                 auto [bids, asks] = book.snapshot();
 
@@ -66,9 +68,12 @@ namespace orderbook
                 }
         }
 
-        void Engine::handle_add_order_request(core::Payload &payload, const core::Timestamp timestamp)
+        void Engine::handle_add_order_request(const core::Payload &payload, const core::Timestamp timestamp)
         {
                 const auto request = deserialize<core::protocol::trading::AddOrderRequest>(payload);
+
+                BOOST_LOG_TRIVIAL(debug) << "Connection ID=" << payload.connectionId << ", " << request;
+
                 auto &book = get_book(request.symbol());
 
                 auto [order_id, trades] =

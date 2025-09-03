@@ -3,7 +3,7 @@
 #include <boost/asio/write.hpp>
 #include <boost/log/trivial.hpp>
 
-#include "tcp/connection.h"
+#include <tcp/connection.h>
 
 namespace tcp
 {

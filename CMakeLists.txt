@@ -92,13 +92,13 @@ target_compile_definitions(matching_engine_lib
 )
 
 # Compiler warnings
-if(MSVC)
+if (MSVC)
     target_compile_options(matching_engine_lib PRIVATE /W4 /permissive-)
-else()
+else ()
     target_compile_options(matching_engine_lib PRIVATE
             -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion
     )
-endif()
+endif ()
 
 # -------------------------------------------------------------
 # Main executables
@@ -106,7 +106,7 @@ add_executable(matching_engine server_main.cpp)
 target_link_libraries(matching_engine PRIVATE matching_engine_lib)
 
 add_executable(matching_engine_client client_main.cpp)
-target_link_libraries(matching_engine_client PRIVATE matching_engine_lib)
+target_link_libraries(matching_engine_client PUBLIC matching_engine_lib)
 
 # -------------------------------------------------------------
 # Testing setup
@@ -133,17 +133,17 @@ gtest_discover_tests(matching_engine_test)
 
 # -------------------------------------------------------------
 # Build type configuration
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
+endif ()
 
 # Optional: Add debug symbols in Release mode
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    if(NOT MSVC)
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    if (NOT MSVC)
         target_compile_options(matching_engine_lib PRIVATE -g)
-    endif()
-endif()
+    endif ()
+endif ()
 
 # -------------------------------------------------------------
 # Installation rules
@@ -165,8 +165,8 @@ write_basic_package_version_file(
 )
 
 # Optional: CTest configuration
-if(BUILD_TESTING)
+if (BUILD_TESTING)
     set_tests_properties(matching_engine_test PROPERTIES
             TIMEOUT 30
     )
-endif()
+endif ()

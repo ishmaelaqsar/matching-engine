@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <core/types.h>
+
 namespace core::protocol
 {
         static void serialize_string(const std::string &str, unsigned char *dst, size_t *offset)

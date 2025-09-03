@@ -4,9 +4,9 @@
 #include <chrono>
 #include <vector>
 
-#include "orderbook/order.h"
-#include "orderbook/shared_counter.h"
-#include "orderbook/trade.h"
+#include <orderbook/order.h>
+#include <orderbook/shared_counter.h>
+#include <orderbook/trade.h>
 
 namespace orderbook
 {
@@ -43,10 +43,21 @@ namespace orderbook
                         return f_quantity;
                 }
 
+                void set_quantity(const core::Quantity quantity)
+                {
+                        f_quantity = quantity;
+                }
+
                 void add_order(const std::shared_ptr<Order> &order)
                 {
                         f_orders.emplace_back(order);
                         f_quantity += order->quantity();
+                }
+
+                void remove_order(const std::shared_ptr<Order> &order)
+                {
+                        f_orders.erase(std::remove(f_orders.begin(), f_orders.end(), order));
+                        f_quantity -= order->quantity();
                 }
 
                 template<typename Callback>

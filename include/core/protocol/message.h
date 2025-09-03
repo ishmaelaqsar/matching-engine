@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <memory>
 
 namespace core::protocol
@@ -34,5 +33,5 @@ namespace core::protocol
 
         std::ostream &operator<<(std::ostream &os, const Message &msg);
 
-        std::unique_ptr<Message> create(const MessageType& type);
+        std::shared_ptr<Message> create(const MessageType& type);
 } // namespace core::protocol

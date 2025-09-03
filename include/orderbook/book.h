@@ -1,14 +1,13 @@
 #pragma once
 
-#include <boost/log/trivial.hpp>
 #include <map>
 #include <unordered_map>
 #include <vector>
 
-#include "core/types.h"
-#include "orderbook/level.h"
-#include "orderbook/order.h"
-#include "orderbook/trade.h"
+#include <core/types.h>
+#include <orderbook/level.h>
+#include <orderbook/order.h>
+#include <orderbook/trade.h>
 
 namespace orderbook
 {
@@ -33,11 +32,9 @@ namespace orderbook
                                                                        const core::Side &side,
                                                                        const core::Timestamp &timestamp);
 
-                void remove_order(core::OrderId order);
+                bool modify_order(core::OrderId order_id, const core::Price &price, const core::Quantity &quantity);
 
-                void modify_order(const Order &order);
-
-                void modify_order(Order &&order);
+                bool remove_order(core::OrderId order_id);
 
                 Snapshot snapshot() const;
 
@@ -52,17 +49,17 @@ namespace orderbook
                         return level_price >= order_price;
                 }
 
-                std::vector<Trade> add_order(const std::shared_ptr<Order> &order);
+                std::shared_ptr<Level> get_level(const std::shared_ptr<Order> &order);
 
                 template<typename Compare1, typename Compare2, typename PriceCheck>
                 std::vector<Trade> match(const std::shared_ptr<Order> &order,
-                                         std::map<core::Price, std::unique_ptr<Level>, Compare1> &levels,
-                                         std::map<core::Price, std::unique_ptr<Level>, Compare2> &opposite_levels,
+                                         std::map<core::Price, std::shared_ptr<Level>, Compare1> &levels,
+                                         std::map<core::Price, std::shared_ptr<Level>, Compare2> &opposite_levels,
                                          PriceCheck price_check);
 
                 std::unordered_map<core::OrderId, std::shared_ptr<Order>> f_orders{};
-                std::map<core::Price, std::unique_ptr<Level>, std::greater<>> f_bids{};
-                std::map<core::Price, std::unique_ptr<Level>, std::less<>> f_asks{};
+                std::map<core::Price, std::shared_ptr<Level>, std::greater<>> f_bids{};
+                std::map<core::Price, std::shared_ptr<Level>, std::less<>> f_asks{};
 
                 SharedCounter<core::OrderId> f_order_counter = SharedCounter<core::OrderId>();
                 SharedCounter<core::TradeId> f_trade_counter = SharedCounter<core::TradeId>();
@@ -70,8 +67,8 @@ namespace orderbook
 
         template<typename Compare1, typename Compare2, typename PriceCheck>
         std::vector<Trade> Book::match(const std::shared_ptr<Order> &order,
-                                       std::map<core::Price, std::unique_ptr<Level>, Compare1> &levels,
-                                       std::map<core::Price, std::unique_ptr<Level>, Compare2> &opposite_levels,
+                                       std::map<core::Price, std::shared_ptr<Level>, Compare1> &levels,
+                                       std::map<core::Price, std::shared_ptr<Level>, Compare2> &opposite_levels,
                                        PriceCheck price_check)
         {
                 std::vector<Trade> trades{};
@@ -81,7 +78,6 @@ namespace orderbook
                                 break;
                         }
                         auto &level = it->second;
-                        BOOST_LOG_TRIVIAL(info) << "Book::match << " << (*order) << " <-> " << (*level);
                         const auto level_trades = level->match_order(
                                 order, [this](const core::OrderId &order_id) -> void { f_orders.erase(order_id); });
                         trades.insert(trades.end(), std::make_move_iterator(level_trades.begin()),
@@ -100,8 +96,6 @@ namespace orderbook
                         level->add_order(order);
                         f_orders[order->id()] = order;
                 }
-
-                BOOST_LOG_TRIVIAL(info) << "Book::match << Trades: " << trades.size();
 
                 return trades;
         }

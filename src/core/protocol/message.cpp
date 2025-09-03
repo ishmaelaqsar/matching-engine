@@ -1,11 +1,10 @@
-#include "core/protocol/message.h"
-
 #include <memory>
 
-#include "core/protocol/trading/add_order.h"
-#include "core/protocol/trading/modify_order.h"
-#include "core/protocol/trading/trade.h"
-#include "core/protocol/view/get_book.h"
+#include <core/protocol/message.h>
+#include <core/protocol/trading/add_order.h>
+#include <core/protocol/trading/modify_order.h>
+#include <core/protocol/trading/trade.h>
+#include <core/protocol/view/get_book.h>
 
 namespace core::protocol
 {
@@ -31,16 +30,16 @@ namespace core::protocol
                 return os;
         }
 
-        std::unique_ptr<Message> create(const MessageType &type)
+        std::shared_ptr<Message> create(const MessageType &type)
         {
                 switch (type) {
-                        case MessageType::Trade: return std::unique_ptr<trading::Trade>();
-                        case MessageType::AddOrderRequest: return std::unique_ptr<trading::AddOrderRequest>();
-                        case MessageType::AddOrderResponse: return std::unique_ptr<trading::AddOrderResponse>();
-                        case MessageType::ModifyOrderRequest: return std::unique_ptr<trading::ModifyOrderRequest>();
-                        case MessageType::ModifyOrderResponse: return std::unique_ptr<trading::ModifyOrderResponse>();
-                        case MessageType::GetBookRequest: return std::unique_ptr<view::GetBookRequest>();
-                        case MessageType::GetBookResponse: return std::unique_ptr<view::GetBookResponse>();
+                        case MessageType::Trade: return std::make_shared<trading::Trade>();
+                        case MessageType::AddOrderRequest: return std::make_shared<trading::AddOrderRequest>();
+                        case MessageType::AddOrderResponse: return std::make_shared<trading::AddOrderResponse>();
+                        case MessageType::ModifyOrderRequest: return std::make_shared<trading::ModifyOrderRequest>();
+                        case MessageType::ModifyOrderResponse: return std::make_shared<trading::ModifyOrderResponse>();
+                        case MessageType::GetBookRequest: return std::make_shared<view::GetBookRequest>();
+                        case MessageType::GetBookResponse: return std::make_shared<view::GetBookResponse>();
                         default: throw std::runtime_error("Unknown MessageType");
                 }
         }

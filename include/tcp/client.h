@@ -2,15 +2,18 @@
 
 #include <boost/asio.hpp>
 
-#include "core/protocol/message.h"
+#include <core/protocol/header.h>
+#include <core/protocol/message.h>
 
 namespace tcp
 {
-        class Client
+        class Client : public std::enable_shared_from_this<Client>
         {
         public:
+                using ResponseHandler = std::function<void(std::shared_ptr<core::protocol::Message>)>;
+
                 Client(boost::asio::io_context &io_context, const std::string &host, unsigned short port,
-                       const std::function<void(core::protocol::Message &)> &response_handler);
+                       ResponseHandler response_handler);
 
                 ~Client();
 
@@ -18,29 +21,19 @@ namespace tcp
 
                 void disconnect();
 
-                [[nodiscard]] bool is_connected() const
-                {
-                        return f_connected.load();
-                }
-
-                explicit operator bool() const
-                {
-                        return f_connected.load();
-                }
-
                 void request(const core::protocol::Message &request);
 
         private:
-                void start_response_thread();
-                std::unique_ptr<core::protocol::Message> poll_responses();
+                void read_header();
+                void read_payload(const core::protocol::Header &header);
 
-                boost::asio::ip::tcp::endpoint f_endpoint;
                 boost::asio::io_context &f_io_context;
+                boost::asio::ip::tcp::endpoint f_endpoint;
                 boost::asio::ip::tcp::socket f_socket;
-                const std::function<void(core::protocol::Message &)> f_response_handler;
-                std::thread f_response_thread;
-                std::atomic_bool f_connected = false;
+
                 std::array<unsigned char, core::protocol::Header::Size> f_header_buffer{};
                 std::vector<unsigned char> f_payload_buffer{};
+
+                const ResponseHandler f_response_handler;
         };
 } // namespace tcp

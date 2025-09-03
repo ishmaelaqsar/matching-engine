@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/protocol/message.h"
-#include "core/types.h"
+#include <core/protocol/message.h>
+#include <core/types.h>
 
 namespace core::protocol::trading
 {
@@ -25,7 +25,8 @@ namespace core::protocol::trading
 
                 [[nodiscard]] size_t size() const override
                 {
-                        return sizeof(StrLen) + f_symbol.length() + sizeof(f_price) + sizeof(f_quantity) + sizeof(f_side);
+                        return sizeof(StrLen) + f_symbol.length() + sizeof(f_price) + sizeof(f_quantity) +
+                               sizeof(f_side);
                 }
 
                 [[nodiscard]] MessageType type() const override

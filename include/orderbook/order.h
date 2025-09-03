@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "core/types.h"
+#include <core/types.h>
 
 namespace orderbook
 {
