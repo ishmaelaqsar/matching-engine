@@ -1,9 +1,7 @@
 #pragma once
 
-#include <utility>
-
-#include "core/types.h"
 #include "core/protocol/message.h"
+#include "core/types.h"
 
 namespace core::protocol::trading
 {

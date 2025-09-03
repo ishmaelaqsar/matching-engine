@@ -3,7 +3,7 @@
 
 namespace orderbook
 {
-        inline std::pair<core::OrderId, std::vector<Trade>> Book::add_order(const   core::Price &price,
+        std::pair<core::OrderId, std::vector<Trade>> Book::add_order(const   core::Price &price,
                                                                               const core::Quantity &quantity,
                                                                               const core::Side &side,
                                                                               const core::Timestamp &timestamp)
@@ -13,7 +13,7 @@ namespace orderbook
                 return std::make_pair(order_id, add_order(order));
         }
 
-        inline std::vector<Trade> Book::add_order(const std::shared_ptr<Order> &order)
+        std::vector<Trade> Book::add_order(const std::shared_ptr<Order> &order)
         {
                 BOOST_LOG_TRIVIAL(info) << "Book::add_order << " << (*order);
 
@@ -24,18 +24,20 @@ namespace orderbook
                 return trades;
         }
 
-        inline Snapshot Book::snapshot() const
+        Snapshot Book::snapshot() const
         {
                 auto bids = std::vector<std::pair<core::Price, core::Quantity>>{};
                 bids.reserve(f_bids.size());
                 for (const auto &[price, level]: f_bids) {
                         bids.emplace_back(price, level->quantity());
                 }
+
                 auto asks = std::vector<std::pair<core::Price, core::Quantity>>{};
                 asks.reserve(f_asks.size());
                 for (const auto &[price, level]: f_asks) {
                         asks.emplace_back(price, level->quantity());
                 }
+
                 return Snapshot{std::move(bids), std::move(asks)};
         }
 }

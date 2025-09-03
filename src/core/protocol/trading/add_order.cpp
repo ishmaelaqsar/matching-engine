@@ -1,14 +1,16 @@
+#include <iostream>
+
 #include "core/protocol/trading/add_order.h"
 #include "core/protocol/serialize_helper.h"
 
 namespace core::protocol::trading
 {
-        inline AddOrderRequest::AddOrderRequest(Symbol symbol, const Price price, const Quantity quantity,
+        AddOrderRequest::AddOrderRequest(Symbol symbol, const Price price, const Quantity quantity,
                                                 const Side side) :
             f_symbol(std::move(symbol)), f_price(price), f_quantity(quantity), f_side(side)
         {}
 
-        inline void AddOrderRequest::serialize(unsigned char *dst) const
+        void AddOrderRequest::serialize(unsigned char *dst) const
         {
                 size_t offset = 0;
                 serialize_string(f_symbol, dst, &offset);
@@ -17,7 +19,7 @@ namespace core::protocol::trading
                 serialize_uint8(static_cast<uint8_t>(f_side), dst, &offset);
         }
 
-        inline void AddOrderRequest::deserialize(const unsigned char *src)
+        void AddOrderRequest::deserialize(const unsigned char *src)
         {
                 size_t offset = 0;
                 f_symbol = deserialize_string(src, &offset);
@@ -26,7 +28,7 @@ namespace core::protocol::trading
                 f_side = static_cast<Side>(deserialize_uint8(src, &offset));
         }
 
-        inline void AddOrderRequest::print(std::ostream &os) const
+        void AddOrderRequest::print(std::ostream &os) const
         {
                 os << "AddOrderRequest{";
                 os << "symbol: " << f_symbol << ", ";

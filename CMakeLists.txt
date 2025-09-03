@@ -102,11 +102,11 @@ endif()
 
 # -------------------------------------------------------------
 # Main executables
-add_executable(matching_engine main.cpp)
+add_executable(matching_engine server_main.cpp)
 target_link_libraries(matching_engine PRIVATE matching_engine_lib)
 
-add_executable(tcp_client client.cpp)
-target_link_libraries(tcp_client PRIVATE matching_engine_lib)
+add_executable(matching_engine_client client_main.cpp)
+target_link_libraries(matching_engine_client PRIVATE matching_engine_lib)
 
 # -------------------------------------------------------------
 # Testing setup
@@ -147,7 +147,7 @@ endif()
 
 # -------------------------------------------------------------
 # Installation rules
-install(TARGETS matching_engine tcp_client
+install(TARGETS matching_engine matching_engine_client
         RUNTIME DESTINATION bin
 )
 

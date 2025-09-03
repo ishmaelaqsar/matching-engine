@@ -1,44 +1,46 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "core/protocol/message.h"
 
 namespace tcp
 {
-        // NOT THREAD SAFE
         class Client
         {
         public:
-                Client(boost::asio::io_context &io_context, const std::string &host, const unsigned short port) :
-                    f_endpoint({boost::asio::ip::make_address(host), port}),
-                    f_io_context(io_context),
-                    f_socket(boost::asio::ip::tcp::socket(io_context))
-                {}
+                Client(boost::asio::io_context &io_context, const std::string &host, unsigned short port,
+                       const std::function<void(core::protocol::Message &)> &response_handler);
 
-                ~Client()
-                {
-                        disconnect();
-                }
+                ~Client();
 
                 void connect();
 
                 void disconnect();
 
-                [[nodiscard]] bool is_connected() const;
+                [[nodiscard]] bool is_connected() const
+                {
+                        return f_connected.load();
+                }
 
-                explicit operator bool() const;
+                explicit operator bool() const
+                {
+                        return f_connected.load();
+                }
 
-                std::shared_ptr<core::protocol::Message>
-                request(const std::unique_ptr<core::protocol::Message> &request);
+                void request(const core::protocol::Message &request);
 
         private:
-                std::shared_ptr<core::protocol::Message> response(core::protocol::MessageType requestType);
+                void start_response_thread();
+                std::unique_ptr<core::protocol::Message> poll_responses();
 
                 boost::asio::ip::tcp::endpoint f_endpoint;
                 boost::asio::io_context &f_io_context;
                 boost::asio::ip::tcp::socket f_socket;
-                bool f_connected = false;
+                const std::function<void(core::protocol::Message &)> f_response_handler;
+                std::thread f_response_thread;
+                std::atomic_bool f_connected = false;
+                std::array<unsigned char, core::protocol::Header::Size> f_header_buffer{};
+                std::vector<unsigned char> f_payload_buffer{};
         };
 } // namespace tcp
