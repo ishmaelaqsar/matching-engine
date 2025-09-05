@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>MainWindow</class>
+    <widget class="QMainWindow" name="MainWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>720</width>
+                <height>520</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Matching Engine Client GUI</string>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                    <layout class="QHBoxLayout" name="connLayout">
+                        <item>
+                            <widget class="QLabel" name="hostLabel">
+                                <property name="text">
+                                    <string>Host:</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
+                            <widget class="QLineEdit" name="hostEdit">
+                                <property name="text">
+                                    <string>127.0.0.1</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
+                            <widget class="QLabel" name="portLabel">
+                                <property name="text">
+                                    <string>Port:</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
+                            <widget class="QLineEdit" name="portEdit">
+                                <property name="text">
+                                    <string>8080</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
+                            <widget class="QPushButton" name="connectButton">
+                                <property name="text">
+                                    <string>Connect</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
+                            <widget class="QPushButton" name="disconnectButton">
+                                <property name="text">
+                                    <string>Disconnect</string>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                </item>
+                <item>
+                    <layout class="QGridLayout" name="orderLayout">
+                        <item row="0" column="0">
+                            <widget class="QLabel" name="symbolLabel">
+                                <property name="text">
+                                    <string>Symbol:</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="0" column="1">
+                            <widget class="QLineEdit" name="symbolEdit"/>
+                        </item>
+                        <item row="0" column="2">
+                            <widget class="QLabel" name="orderIdLabel">
+                                <property name="text">
+                                    <string>Order ID:</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="0" column="3">
+                            <widget class="QSpinBox" name="orderIdEdit">
+                                <property name="maximum">
+                                    <number>999999999</number>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="1" column="0">
+                            <widget class="QLabel" name="priceLabel">
+                                <property name="text">
+                                    <string>Price:</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="1" column="1">
+                            <widget class="QSpinBox" name="priceEdit">
+                                <property name="maximum">
+                                    <number>1000000000</number>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="1" column="2">
+                            <widget class="QLabel" name="qtyLabel">
+                                <property name="text">
+                                    <string>Quantity:</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="1" column="3">
+                            <widget class="QSpinBox" name="qtyEdit">
+                                <property name="maximum">
+                                    <number>1000000000</number>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="2" column="0">
+                            <widget class="QLabel" name="sideLabel">
+                                <property name="text">
+                                    <string>Side:</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="2" column="1">
+                            <widget class="QComboBox" name="sideCombo">
+                                <item>
+                                    <property name="text">
+                                        <string>Buy</string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string>Sell</string>
+                                    </property>
+                                </item>
+                            </widget>
+                        </item>
+                        <item row="2" column="2">
+                            <widget class="QPushButton" name="getButton">
+                                <property name="text">
+                                    <string>Get Book</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="2" column="3">
+                            <widget class="QPushButton" name="addButton">
+                                <property name="text">
+                                    <string>Add Order</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="2">
+                            <widget class="QPushButton" name="modifyButton">
+                                <property name="text">
+                                    <string>Modify Order</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="3">
+                            <widget class="QPushButton" name="cancelButton">
+                                <property name="text">
+                                    <string>Cancel Order</string>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                </item>
+                <item>
+                    <widget class="QTextEdit" name="logText">
+                        <property name="readOnly">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
+                </item>
+            </layout>
+        </widget>
+    </widget>
+    <resources/>
+    <connections/>
+</ui>

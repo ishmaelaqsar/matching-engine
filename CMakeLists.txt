@@ -123,6 +123,38 @@ add_executable(matching_engine_client client_main.cpp)
 target_link_libraries(matching_engine_client PUBLIC matching_engine_lib)
 
 # -------------------------------------------------------------
+# Qt GUI executable
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+
+set(GUI_SOURCES
+        gui/main.cpp
+        gui/mainwindow.cpp
+        gui/mainwindow.h
+        gui/mainwindow.ui
+)
+
+qt_wrap_ui(GUI_UI_HEADERS gui/mainwindow.ui)
+qt_wrap_cpp(GUI_MOC_SOURCES gui/mainwindow.h)
+
+add_executable(matching_engine_gui
+        ${GUI_SOURCES}
+        ${GUI_UI_HEADERS}
+        ${GUI_MOC_SOURCES}
+)
+
+target_include_directories(matching_engine_gui PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+target_link_libraries(matching_engine_gui
+        PRIVATE
+        matching_engine_lib
+        Qt6::Widgets
+)
+
+set_target_properties(matching_engine_gui PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+# -------------------------------------------------------------
 # Testing setup
 include(FetchContent)
 FetchContent_Declare(
@@ -155,7 +187,7 @@ endif ()
 
 # -------------------------------------------------------------
 # Installation rules
-install(TARGETS matching_engine matching_engine_client
+install(TARGETS matching_engine matching_engine_client matching_engine_gui
         RUNTIME DESTINATION bin
 )
 
