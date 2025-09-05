@@ -4,18 +4,30 @@ project(matching_engine
         LANGUAGES CXX
 )
 
+# -------------------------------------------------------------
 # Project-wide settings
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Build type configuration
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif ()
+
+# Output directories (set BEFORE add_executable/add_library)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# -------------------------------------------------------------
 # Configuration
 set(RINGBUFFER_CAPACITY 4096 CACHE STRING "Ring buffer capacity")
 add_compile_definitions(RINGBUFFER_CAPACITY=${RINGBUFFER_CAPACITY})
 
 # -------------------------------------------------------------
 # Collect sources
-
 set(CORE_HEADERS
         include/core/types.h
         include/core/ring_buffer.h
@@ -134,12 +146,6 @@ include(GoogleTest)
 gtest_discover_tests(matching_engine_test)
 
 # -------------------------------------------------------------
-# Build type configuration
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif ()
-
 # Optional: Add debug symbols in Release mode
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     if (NOT MSVC)
