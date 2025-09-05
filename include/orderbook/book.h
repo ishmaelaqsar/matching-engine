@@ -20,6 +20,8 @@ namespace orderbook
         class Book
         {
         public:
+                using LevelRemoval = std::function<void()>;
+
                 Book() = default;
                 Book(const Book &book) = default;
                 Book(Book &&book) = default;
@@ -32,9 +34,16 @@ namespace orderbook
                                                                        const core::Side &side,
                                                                        const core::Timestamp &timestamp);
 
-                bool modify_order(core::OrderId order_id, const core::Price &price, const core::Quantity &quantity);
+                std::vector<Trade> add_order(const core::OrderId &order_id, const core::Price &price,
+                                             const core::Quantity &quantity, const core::Side &side,
+                                             const core::Timestamp &timestamp);
 
-                bool remove_order(core::OrderId order_id);
+                std::pair<bool, std::vector<Trade>> modify_order(const core::OrderId &order_id,
+                                                                 const core::Price &price,
+                                                                 const core::Quantity &quantity,
+                                                                 const core::Timestamp &timestamp);
+
+                bool remove_order(const core::OrderId &order_id);
 
                 Snapshot snapshot() const;
 
@@ -49,7 +58,7 @@ namespace orderbook
                         return level_price >= order_price;
                 }
 
-                std::shared_ptr<Level> get_level(const std::shared_ptr<Order> &order);
+                std::pair<std::shared_ptr<Level>, LevelRemoval> get_level(const std::shared_ptr<Order> &order);
 
                 template<typename Compare1, typename Compare2, typename PriceCheck>
                 std::vector<Trade> match(const std::shared_ptr<Order> &order,

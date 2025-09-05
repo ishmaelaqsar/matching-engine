@@ -47,6 +47,8 @@ namespace orderbook
 
                 void handle_get_book_request(const core::Payload &payload);
                 void handle_add_order_request(const core::Payload &payload, core::Timestamp timestamp);
+                void handle_modify_order_request(const core::Payload &payload, core::Timestamp timestamp);
+                void handle_cancel_order_request(const core::Payload &payload);
 
                 std::unordered_map<core::Symbol, std::unique_ptr<Book>> f_order_books{};
                 const std::shared_ptr<core::RingBuffer<core::Payload>> &f_inbound_buffer;

@@ -26,6 +26,7 @@ set(CORE_HEADERS
         include/core/protocol/trading/add_order.h
         include/core/protocol/trading/modify_order.h
         include/core/protocol/trading/trade.h
+        include/core/protocol/trading/cancel_order.h
 )
 set(ORDER_BOOK_HEADERS
         include/orderbook/book.h
@@ -48,6 +49,7 @@ set(CORE_SOURCES
         src/core/protocol/trading/trade.cpp
         src/core/protocol/view/get_book.cpp
         src/core/protocol/header.cpp
+        src/core/protocol/trading/cancel_order.cpp
 )
 set(ORDER_BOOK_SOURCES
         src/orderbook/book.cpp

@@ -1,7 +1,6 @@
 #include <algorithm>
-#include <boost/asio.hpp> // ensure io_context is declared
+#include <boost/asio.hpp>
 #include <boost/log/trivial.hpp>
-#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -13,6 +12,8 @@
 #include <unordered_map>
 
 #include <core/protocol/trading/add_order.h>
+#include <core/protocol/trading/cancel_order.h>
+#include <core/protocol/trading/modify_order.h>
 #include <core/protocol/view/get_book.h>
 #include <tcp/client.h>
 
@@ -35,7 +36,7 @@ std::unordered_map<std::string, std::string> parse_args(int argc, char **argv)
         return args;
 }
 
-core::protocol::view::GetBookRequest get_book_request(std::string_view line)
+core::protocol::view::GetBookRequest get_book_request(const std::string_view line)
 {
         std::istringstream iss{std::string(line)};
         std::string symbol;
@@ -43,7 +44,7 @@ core::protocol::view::GetBookRequest get_book_request(std::string_view line)
         return core::protocol::view::GetBookRequest(std::move(symbol));
 }
 
-core::protocol::trading::AddOrderRequest add_order_request(std::string_view line)
+core::protocol::trading::AddOrderRequest add_order_request(const std::string_view line)
 {
         std::istringstream iss{std::string(line)};
         std::string symbol;
@@ -60,6 +61,28 @@ core::protocol::trading::AddOrderRequest add_order_request(std::string_view line
         return {std::move(symbol), price, quantity, side};
 }
 
+core::protocol::trading::ModifyOrderRequest modify_order_request(const std::string_view line)
+{
+        std::istringstream iss{std::string(line)};
+        std::string symbol;
+        std::uint64_t order_id, price, quantity;
+        if (!(iss >> symbol >> order_id >> price >> quantity)) {
+                throw std::invalid_argument("invalid modify order input: " + std::string(line));
+        }
+        return {std::move(symbol), order_id, price, quantity};
+}
+
+core::protocol::trading::CancelOrderRequest cancel_order_request(const std::string_view line)
+{
+        std::istringstream iss{std::string(line)};
+        std::string symbol;
+        std::uint64_t order_id;
+        if (!(iss >> symbol >> order_id)) {
+                throw std::invalid_argument("invalid cancel order input: " + std::string(line));
+        }
+        return {std::move(symbol), order_id};
+}
+
 std::unique_ptr<core::protocol::Message> parse_line(std::string_view line)
 {
         std::istringstream iss{std::string(line)};
@@ -73,19 +96,26 @@ std::unique_ptr<core::protocol::Message> parse_line(std::string_view line)
 
         if (type == "get") return std::make_unique<core::protocol::view::GetBookRequest>(get_book_request(rest));
         if (type == "add") return std::make_unique<core::protocol::trading::AddOrderRequest>(add_order_request(rest));
+        if (type == "modify")
+                return std::make_unique<core::protocol::trading::ModifyOrderRequest>(modify_order_request(rest));
+        if (type == "cancel")
+                return std::make_unique<core::protocol::trading::CancelOrderRequest>(cancel_order_request(rest));
+
         throw std::invalid_argument("unknown request type: " + type);
 }
 
-int main(int argc, char **argv)
+int main(const int argc, char **argv)
 {
         const auto args = parse_args(argc, argv);
 
         const std::string host = args.at("host");
         const auto port_ul = std::strtoul(args.at("port").c_str(), nullptr, 10);
+
         if (port_ul > 65535) {
                 BOOST_LOG_TRIVIAL(error) << "Port out of range: " << port_ul;
                 return 1;
         }
+
         const unsigned short port = static_cast<unsigned short>(port_ul);
 
         boost::asio::io_context io_context;

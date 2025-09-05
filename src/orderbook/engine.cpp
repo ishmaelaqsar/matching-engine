@@ -7,6 +7,9 @@
 #include <core/protocol/view/get_book.h>
 #include <orderbook/engine.h>
 
+#include "core/protocol/trading/cancel_order.h"
+#include "core/protocol/trading/modify_order.h"
+
 namespace orderbook
 {
         static constexpr auto BatchSize = 500;
@@ -38,6 +41,14 @@ namespace orderbook
                                 }
                                 case core::protocol::MessageType::AddOrderRequest: {
                                         handle_add_order_request(inbound_payload, timestamp);
+                                        break;
+                                }
+                                case core::protocol::MessageType::ModifyOrderRequest: {
+                                        handle_modify_order_request(inbound_payload, timestamp);
+                                        break;
+                                }
+                                case core::protocol::MessageType::CancelOrderRequest: {
+                                        handle_cancel_order_request(inbound_payload);
                                         break;
                                 }
                                 default: {
@@ -94,6 +105,54 @@ namespace orderbook
                         if (!f_outbound_buffer->push(*outbound_payload)) {
                                 BOOST_LOG_TRIVIAL(warning) << "Outbound buffer is full, dropping message";
                         }
+                }
+        }
+
+        void Engine::handle_modify_order_request(const core::Payload &payload, core::Timestamp timestamp)
+        {
+                const auto request = deserialize<core::protocol::trading::ModifyOrderRequest>(payload);
+
+                BOOST_LOG_TRIVIAL(debug) << "Connection ID=" << payload.connectionId << ", " << request;
+
+                auto &book = get_book(request.symbol());
+
+                auto [success, trades] =
+                        book.modify_order(request.order_id(), request.price(), request.quantity(), timestamp);
+
+                auto outbound_payload = serialize(
+                        payload.connectionId,
+                        core::protocol::trading::ModifyOrderResponse(request.symbol(), request.order_id(), success));
+                if (!f_outbound_buffer->push(*outbound_payload)) {
+                        BOOST_LOG_TRIVIAL(warning) << "Outbound buffer is full, dropping message";
+                }
+
+                for (const auto &trade: trades) {
+                        outbound_payload =
+                                serialize(payload.connectionId,
+                                          core::protocol::trading::Trade(trade.id(), trade.price(), trade.quantity(),
+                                                                         trade.timestamp(), trade.source_order(),
+                                                                         trade.matched_order()));
+                        if (!f_outbound_buffer->push(*outbound_payload)) {
+                                BOOST_LOG_TRIVIAL(warning) << "Outbound buffer is full, dropping message";
+                        }
+                }
+        }
+
+        void Engine::handle_cancel_order_request(const core::Payload &payload)
+        {
+                const auto request = deserialize<core::protocol::trading::CancelOrderRequest>(payload);
+
+                BOOST_LOG_TRIVIAL(debug) << "Connection ID=" << payload.connectionId << ", " << request;
+
+                auto &book = get_book(request.symbol());
+
+                const auto success = book.remove_order(request.order_id());
+
+                const auto outbound_payload = serialize(
+                        payload.connectionId,
+                        core::protocol::trading::CancelOrderResponse(request.symbol(), request.order_id(), success));
+                if (!f_outbound_buffer->push(*outbound_payload)) {
+                        BOOST_LOG_TRIVIAL(warning) << "Outbound buffer is full, dropping message";
                 }
         }
 } // namespace orderbook

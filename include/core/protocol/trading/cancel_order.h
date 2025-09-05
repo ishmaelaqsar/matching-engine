@@ -5,17 +5,17 @@
 
 namespace core::protocol::trading
 {
-        class ModifyOrderRequest final : public Message
+        class CancelOrderRequest final : public Message
         {
         public:
-                ModifyOrderRequest() = default;
-                ModifyOrderRequest(const ModifyOrderRequest &request) = default;
-                ModifyOrderRequest(ModifyOrderRequest &&request) = default;
-                ModifyOrderRequest &operator=(const ModifyOrderRequest &request) = default;
-                ModifyOrderRequest &operator=(ModifyOrderRequest &&request) = default;
-                ~ModifyOrderRequest() override = default;
+                CancelOrderRequest() = default;
+                CancelOrderRequest(const CancelOrderRequest &request) = default;
+                CancelOrderRequest(CancelOrderRequest &&request) = default;
+                CancelOrderRequest &operator=(const CancelOrderRequest &request) = default;
+                CancelOrderRequest &operator=(CancelOrderRequest &&request) = default;
+                ~CancelOrderRequest() override = default;
 
-                ModifyOrderRequest(Symbol symbol, OrderId order_id, Price price, Quantity quantity);
+                CancelOrderRequest(Symbol symbol, OrderId order_id);
 
                 void serialize(unsigned char *dst) const override;
 
@@ -25,12 +25,12 @@ namespace core::protocol::trading
 
                 [[nodiscard]] size_t size() const override
                 {
-                        return sizeof(StrLen) + f_symbol.length() + sizeof(f_order_id) + sizeof(f_price) + sizeof(f_quantity);
+                        return sizeof(StrLen) + f_symbol.length() + sizeof(f_order_id);
                 }
 
                 [[nodiscard]] MessageType type() const override
                 {
-                        return MessageType::ModifyOrderRequest;
+                        return MessageType::CancelOrderRequest;
                 }
 
                 [[nodiscard]] Symbol symbol() const
@@ -43,34 +43,22 @@ namespace core::protocol::trading
                         return f_order_id;
                 }
 
-                [[nodiscard]] Price price() const
-                {
-                        return f_price;
-                }
-
-                [[nodiscard]] Quantity quantity() const
-                {
-                        return f_quantity;
-                }
-
         private:
                 Symbol f_symbol{};
                 OrderId f_order_id{};
-                Price f_price{};
-                Quantity f_quantity{};
         };
 
-        class ModifyOrderResponse final : public Message
+        class CancelOrderResponse final : public Message
         {
         public:
-                ModifyOrderResponse() = default;
-                ModifyOrderResponse(const ModifyOrderResponse &response) = default;
-                ModifyOrderResponse(ModifyOrderResponse &&response) = default;
-                ModifyOrderResponse &operator=(const ModifyOrderResponse &response) = default;
-                ModifyOrderResponse &operator=(ModifyOrderResponse &&response) = default;
-                ~ModifyOrderResponse() override = default;
+                CancelOrderResponse() = default;
+                CancelOrderResponse(const CancelOrderResponse &response) = default;
+                CancelOrderResponse(CancelOrderResponse &&response) = default;
+                CancelOrderResponse &operator=(const CancelOrderResponse &response) = default;
+                CancelOrderResponse &operator=(CancelOrderResponse &&response) = default;
+                ~CancelOrderResponse() override = default;
 
-                ModifyOrderResponse(Symbol symbol, OrderId order_id, bool success);
+                CancelOrderResponse(Symbol symbol, OrderId order_id, bool success);
 
                 void serialize(unsigned char *dst) const override;
 
@@ -85,7 +73,7 @@ namespace core::protocol::trading
 
                 [[nodiscard]] MessageType type() const override
                 {
-                        return MessageType::ModifyOrderResponse;
+                        return MessageType::CancelOrderResponse;
                 }
 
                 [[nodiscard]] Symbol symbol() const

@@ -1,46 +1,39 @@
 #include <core/protocol/serialize_helper.h>
-#include <core/protocol/trading/modify_order.h>
+#include <core/protocol/trading/cancel_order.h>
 
 namespace core::protocol::trading
 {
-        ModifyOrderRequest::ModifyOrderRequest(Symbol symbol, const OrderId order_id, const Price price,
-                                               const Quantity quantity) :
-            f_symbol(std::move(symbol)), f_order_id(order_id), f_price(price), f_quantity(quantity)
+        CancelOrderRequest::CancelOrderRequest(Symbol symbol, const OrderId order_id) :
+            f_symbol(std::move(symbol)), f_order_id(order_id)
         {}
 
-        void ModifyOrderRequest::serialize(unsigned char *dst) const
+        void CancelOrderRequest::serialize(unsigned char *dst) const
         {
                 size_t offset = 0;
                 serialize_string(f_symbol, dst, &offset);
                 serialize_uint64(f_order_id, dst, &offset);
-                serialize_uint64(f_price, dst, &offset);
-                serialize_uint64(f_quantity, dst, &offset);
         }
 
-        void ModifyOrderRequest::deserialize(const unsigned char *src)
+        void CancelOrderRequest::deserialize(const unsigned char *src)
         {
                 size_t offset = 0;
                 f_symbol = deserialize_string(src, &offset);
                 f_order_id = deserialize_uint64(src, &offset);
-                f_price = deserialize_uint64(src, &offset);
-                f_quantity = deserialize_uint64(src, &offset);
         }
 
-        void ModifyOrderRequest::print(std::ostream &os) const
+        void CancelOrderRequest::print(std::ostream &os) const
         {
-                os << "ModifyOrderRequest{";
+                os << "CancelOrderRequest{";
                 os << "symbol: " << f_symbol << ", ";
-                os << "order_id: " << f_order_id << ", ";
-                os << "price: " << f_price << ", ";
-                os << "quantity: " << f_quantity << ", ";
+                os << "order_id: " << f_order_id;
                 os << "}";
         }
 
-        ModifyOrderResponse::ModifyOrderResponse(Symbol symbol, const OrderId order_id, const bool success) :
+        CancelOrderResponse::CancelOrderResponse(Symbol symbol, const OrderId order_id, const bool success) :
             f_symbol(std::move(symbol)), f_order_id(order_id), f_success(success)
         {}
 
-        void ModifyOrderResponse::serialize(unsigned char *dst) const
+        void CancelOrderResponse::serialize(unsigned char *dst) const
         {
                 size_t offset = 0;
                 serialize_string(f_symbol, dst, &offset);
@@ -48,7 +41,7 @@ namespace core::protocol::trading
                 serialize_uint8(f_success, dst, &offset);
         }
 
-        void ModifyOrderResponse::deserialize(const unsigned char *src)
+        void CancelOrderResponse::deserialize(const unsigned char *src)
         {
                 size_t offset = 0;
                 f_symbol = deserialize_string(src, &offset);
@@ -56,9 +49,9 @@ namespace core::protocol::trading
                 f_success = static_cast<bool>(deserialize_uint8(src, &offset));
         }
 
-        void ModifyOrderResponse::print(std::ostream &os) const
+        void CancelOrderResponse::print(std::ostream &os) const
         {
-                os << "ModifyOrderResponse{";
+                os << "CancelOrderResponse{";
                 os << "symbol: " << f_symbol << ", ";
                 os << "order_id: " << f_order_id << ", ";
                 os << "success: " << f_success;

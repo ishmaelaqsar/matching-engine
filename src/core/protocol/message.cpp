@@ -6,6 +6,8 @@
 #include <core/protocol/trading/trade.h>
 #include <core/protocol/view/get_book.h>
 
+#include "core/protocol/trading/cancel_order.h"
+
 namespace core::protocol
 {
         std::ostream &operator<<(std::ostream &os, const MessageType &type)
@@ -38,6 +40,8 @@ namespace core::protocol
                         case MessageType::AddOrderResponse: return std::make_shared<trading::AddOrderResponse>();
                         case MessageType::ModifyOrderRequest: return std::make_shared<trading::ModifyOrderRequest>();
                         case MessageType::ModifyOrderResponse: return std::make_shared<trading::ModifyOrderResponse>();
+                        case MessageType::CancelOrderRequest: return std::make_shared<trading::CancelOrderRequest>();
+                        case MessageType::CancelOrderResponse: return std::make_shared<trading::CancelOrderResponse>();
                         case MessageType::GetBookRequest: return std::make_shared<view::GetBookRequest>();
                         case MessageType::GetBookResponse: return std::make_shared<view::GetBookResponse>();
                         default: throw std::runtime_error("Unknown MessageType");
