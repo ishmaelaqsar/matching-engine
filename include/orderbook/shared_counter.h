@@ -8,18 +8,14 @@ template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
 class SharedCounter
 {
 public:
-        SharedCounter() :
-                f_counter(std::make_shared<T>(0)) {}
-
         SharedCounter(const SharedCounter &other) = default;
-
         SharedCounter(SharedCounter &&other) = default;
-
+        SharedCounter &operator=(const SharedCounter &other) = default;
+        SharedCounter &operator=(SharedCounter &&other) = default;
         ~SharedCounter() = default;
 
-        SharedCounter &operator=(const SharedCounter &other) = default;
-
-        SharedCounter &operator=(SharedCounter &&other) = default;
+        SharedCounter() : f_counter(std::make_shared<T>(0))
+        {}
 
         T &operator++()
         {

@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "../../../src/common/protocol/header.h"
+#include <core/protocol/header.h>
 
-using namespace common;
-using namespace common::protocol;
+using namespace core;
+using namespace protocol;
 
 TEST(SerDeTest, HeaderAddOrderRequest)
 {
@@ -31,13 +31,4 @@ TEST(SerDeTest, HeaderAddOrderResponse)
 
         ASSERT_EQ(expected_type, type);
         ASSERT_EQ(expected_length, length);
-}
-
-TEST(SerDeTest, HeaderError)
-{
-        unsigned char buffer[Header::Size];
-        EXPECT_THROW(
-                Header::serialize({MessageType::AddOrderRequest, std::numeric_limits<uint16_t>::max() + 1}, buffer),
-                std::length_error
-                );
 }

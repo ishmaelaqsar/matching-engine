@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "../../../../src/common/protocol/trading/add_order.h"
+#include <core/protocol/trading/add_order.h>
 
-using namespace common;
+using namespace core;
 using namespace protocol::trading;
 
 TEST(SerDeTest, AddOrderRequest)

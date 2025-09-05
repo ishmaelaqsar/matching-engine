@@ -1,13 +1,12 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#pragma once
 
 #include <gtest/gtest.h>
 
-#include "../include/core/types.h"
-#include "../src/orderbook/order.h"
+#include <core/types.h>
+#include <orderbook/order.h>
 
 using namespace orderbook;
-using namespace common;
+using namespace core;
 
 inline std::shared_ptr<Order> create_order(OrderId order_id, Price price, Quantity quantity, Side side,
                                            Timestamp timestamp)
@@ -42,5 +41,3 @@ void assert_iterable(std::initializer_list<T> expected, std::vector<T> actual, s
                 check(*it, actual[i]);
         }
 }
-
-#endif // HELPERS_H

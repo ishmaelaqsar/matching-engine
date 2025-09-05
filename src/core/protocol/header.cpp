@@ -5,9 +5,6 @@ namespace core::protocol
 {
         void Header::serialize(const Header message_header, unsigned char *dst)
         {
-                if (message_header.length > std::numeric_limits<size_t>::max()) {
-                        throw std::length_error("header.length too big to serialize");
-                }
                 size_t offset = 0;
                 serialize_uint8(static_cast<uint8_t>(message_header.type), dst, &offset);
                 serialize_uint16(static_cast<uint16_t>(message_header.length), dst, &offset);

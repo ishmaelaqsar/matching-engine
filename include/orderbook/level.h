@@ -13,6 +13,8 @@ namespace orderbook
         class Level
         {
         public:
+                using OrderCallback = std::function<void(const core::OrderId &)>;
+
                 Level(const Level &level) = delete;
                 Level(Level &&level) = default;
                 ~Level() = default;
@@ -60,51 +62,7 @@ namespace orderbook
                         f_quantity -= order->quantity();
                 }
 
-                template<typename Callback>
-                std::vector<Trade> match_order(const std::shared_ptr<Order> &order, Callback order_fill_callback)
-                {
-                        auto trades = std::vector<Trade>();
-                        auto now = std::chrono::system_clock::now().time_since_epoch().count();
-
-                        for (auto it = f_orders.begin(); it != f_orders.end() && order->quantity() > 0;) {
-                                if (Order *target_order = it->get(); target_order->quantity() == order->quantity()) {
-                                        BOOST_LOG_TRIVIAL(debug)
-                                                << "Level::match_order << Both orders filled: " << order->id()
-                                                << " == " << target_order->id();
-                                        const auto traded_qty = order->quantity();
-                                        trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
-                                                            target_order->id());
-                                        f_quantity -= traded_qty;
-                                        order->set_quantity(0);
-                                        it = f_orders.erase(it);
-                                        order_fill_callback(target_order->id());
-                                } else if (target_order->quantity() < order->quantity()) {
-                                        BOOST_LOG_TRIVIAL(debug)
-                                                << "Level::match_order << Level order filled: " << order->id() << " > "
-                                                << target_order->id();
-                                        const auto traded_qty = target_order->quantity();
-                                        trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
-                                                            target_order->id());
-                                        f_quantity -= traded_qty;
-                                        order->set_quantity(order->quantity() - traded_qty);
-                                        it = f_orders.erase(it);
-                                        order_fill_callback(target_order->id());
-                                } else {
-                                        BOOST_LOG_TRIVIAL(debug)
-                                                << "Level::match_order << Incoming order filled: " << order->id()
-                                                << " < " << target_order->id();
-                                        const auto traded_qty = order->quantity();
-                                        trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
-                                                            target_order->id());
-                                        f_quantity -= traded_qty;
-                                        order->set_quantity(0);
-                                        target_order->set_quantity(target_order->quantity() - traded_qty);
-                                        ++it;
-                                }
-                        }
-
-                        return trades;
-                }
+                std::vector<Trade> match_order(const std::shared_ptr<Order> &order, OrderCallback order_fill_callback);
 
         private:
                 core::Price f_price;
@@ -112,4 +70,48 @@ namespace orderbook
                 core::Quantity f_quantity = 0;
                 std::vector<std::shared_ptr<Order>> f_orders;
         };
+
+        inline std::vector<Trade> Level::match_order(const std::shared_ptr<Order> &order,
+                                                     OrderCallback order_fill_callback)
+        {
+                auto trades = std::vector<Trade>();
+                auto now = std::chrono::system_clock::now().time_since_epoch().count();
+
+                for (auto it = f_orders.begin(); it != f_orders.end() && order->quantity() > 0;) {
+                        if (Order *target_order = it->get(); target_order->quantity() == order->quantity()) {
+                                BOOST_LOG_TRIVIAL(debug) << "Level::match_order << Both orders filled: " << order->id()
+                                                         << " == " << target_order->id();
+                                const auto traded_qty = order->quantity();
+                                trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
+                                                    target_order->id());
+                                f_quantity -= traded_qty;
+                                order->set_quantity(0);
+                                it = f_orders.erase(it);
+                                order_fill_callback(target_order->id());
+                        } else if (target_order->quantity() < order->quantity()) {
+                                BOOST_LOG_TRIVIAL(debug) << "Level::match_order << Level order filled: " << order->id()
+                                                         << " > " << target_order->id();
+                                const auto traded_qty = target_order->quantity();
+                                trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
+                                                    target_order->id());
+                                f_quantity -= traded_qty;
+                                order->set_quantity(order->quantity() - traded_qty);
+                                it = f_orders.erase(it);
+                                order_fill_callback(target_order->id());
+                        } else {
+                                BOOST_LOG_TRIVIAL(debug)
+                                        << "Level::match_order << Incoming order filled: " << order->id() << " < "
+                                        << target_order->id();
+                                const auto traded_qty = order->quantity();
+                                trades.emplace_back(++f_id_counter, f_price, traded_qty, now, order->id(),
+                                                    target_order->id());
+                                f_quantity -= traded_qty;
+                                order->set_quantity(0);
+                                target_order->set_quantity(target_order->quantity() - traded_qty);
+                                ++it;
+                        }
+                }
+
+                return trades;
+        }
 } // namespace orderbook

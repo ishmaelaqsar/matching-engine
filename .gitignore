@@ -107,6 +107,7 @@ flycheck_*.el
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/inspectionProfiles
 
 # AWS User-specific
 .idea/**/aws.xml
@@ -142,6 +143,8 @@ flycheck_*.el
 
 # CMake
 cmake-build-*/
+.cmake/
+*.cmake
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml

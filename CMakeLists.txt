@@ -125,7 +125,7 @@ enable_testing()
 add_executable(matching_engine_test
         ${TEST_SOURCES}
 )
-target_link_libraries(matching_engine_test PRIVATE
+target_link_libraries(matching_engine_test PUBLIC
         matching_engine_lib
         GTest::gtest_main
 )

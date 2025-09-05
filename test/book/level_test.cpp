@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 
-#include "../../include/core/types.h"
-#include "../../src/orderbook/level.h"
+#include <core/types.h>
+#include <orderbook/level.h>
+
 #include "../helpers.h"
 
 using namespace orderbook;
-using namespace common;
+using namespace core;
 
 TEST(BookTest, LevelAddOrder)
 {
@@ -37,8 +38,9 @@ TEST(BookTest, LevelMatchOrder)
         ASSERT_EQ(level.quantity(), 200);
 
         auto order_sell = create_order(2, price, 150, Side::Sell, 3);
+        bool filled = false;
 
-        const auto trades = level.match_order(order_sell);
+        const auto trades = level.match_order(order_sell, [&filled](const OrderId &) { filled = true; });
 
         ASSERT_EQ(trades.size(), 2);
 
@@ -56,4 +58,5 @@ TEST(BookTest, LevelMatchOrder)
 
         ASSERT_EQ(level.quantity(), 50);
         ASSERT_EQ(order_sell->quantity(), 0);
+        ASSERT_TRUE(filled);
 }

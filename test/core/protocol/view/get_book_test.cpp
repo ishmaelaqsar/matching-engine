@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "../../../../src/common/protocol/header.h"
-#include "../../../../src/common/protocol/view/get_book.h"
+#include <core/protocol/view/get_book.h>
+
 #include "../../../helpers.h"
 
-using namespace common;
+using namespace core;
 using namespace protocol::view;
 
 TEST(SerDeTest, GetBookRequest)
