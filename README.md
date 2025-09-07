@@ -8,17 +8,21 @@ This project builds a reusable library and provides both a server (`matching_eng
 
 ## Features
 
-- **Core library (`matching_engine_lib`)**
-    - Order book management
+- **Core library (`matching_engine_core`)**
     - Protocol serialization/deserialization
     - TCP client/server components
+  **Server library (`matching_engine_lib`)**
+    - Builds on top of `matching_engine_core`
+    - Implements the engine and order book logic
 - **Executables**
-    - `matching_engine` — main server binary
-    - `matching_engine_client` — client binary
+    - `matching_engine_server` — main server binary
+    - `matching_engine_client` — cli client binary
+    - `matching_engine_gui` - Qt client binary
 - **Testing**
     - Unit tests using [GoogleTest](https://github.com/google/googletest)
 - **Dependencies**
     - [Boost](https://www.boost.org/) (components: `log`, `log_setup`, `system`, `thread`)
+    - [Qt6](https://doc.qt.io/qt-6/widgets.html) Widgets (for GUI client)
 
 ---
 
@@ -27,6 +31,33 @@ This project builds a reusable library and provides both a server (`matching_eng
 - CMake **3.25+**
 - C++17 compiler (GCC, Clang, or MSVC)
 - Boost (with required components)
+- Qt6 (for GUI client)
+
+---
+
+## Project Layout
+
+```text
+core/                # Core library (protocol, TCP, ring buffer)
+core/include/        # Public headers for core
+core/lib/            # Core source files
+core/tests/          # Unit tests for core
+
+server/              # Server library and executable
+server/include/      # Server headers (engine, orderbook)
+server/src/          # Server sources
+server/tests/        # Unit tests for server
+
+client/              # CLI client
+client/include/      # Client headers
+client/src/          # CLI client sources
+
+gui/                 # Qt GUI client
+gui/src/             # GUI sources (mainwindow, main)
+gui/src/mainwindow.ui # Qt Designer UI file
+
+CMakeLists.txt       # Top-level CMake configuration
+```
 
 ---
 
@@ -55,6 +86,11 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake -DRINGBUFFER_CAPACITY=8192 ..
 ```
 
+- Max payload size (default: 256):
+```bash
+cmake -DMAX_PAYLOAD_SIZE=512 ..
+```
+
 ### 2. Build
 ```bash
 cmake --build .
@@ -77,8 +113,9 @@ cmake --install .
 ```
 
 This will install:
-- bin/matching_engine
+- bin/matching_engine_server
 - bin/matching_engine_client
+- bin/matching_engine_gui
 - include/matching_engine/*.h
 
 You can adjust the install prefix:
@@ -88,15 +125,14 @@ cmake --install . --prefix /usr/local
 
 ## Running tests
 
-GoogleTest is fetched automatically during the build.
-
 Run tests with:
 ```bash
 ctest
 ```
 or directly:
 ```bash
-./bin/matching_engine_test
+./bin/matching_engine_core_tests
+./bin/matching_engine_server_tests
 ```
 
 ## Cleaning the Build
@@ -109,15 +145,4 @@ cmake --build . --target clean
 - Full clean (recommended):
 ```bash
 rm -rf build/
-```
-
-## Project Layout
-
-```text
-include/           # Public headers
-src/               # Library source files
-server_main.cpp    # Entry point for server executable
-client_main.cpp    # Entry point for client executable
-test/              # Unit tests
-CMakeLists.txt     # Build configuration
 ```
