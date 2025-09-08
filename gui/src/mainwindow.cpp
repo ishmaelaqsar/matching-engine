@@ -409,8 +409,9 @@ void MainWindow::handleGetBookResponse(const core::protocol::view::GetBookRespon
         if (const auto *widgets = getCurrentTabWidgets(); widgets) {
                 const auto bestBid = msg.bids().empty() ? core::protocol::view::Level{0, 0} : msg.bids().front();
                 const auto bestAsk = msg.asks().empty() ? core::protocol::view::Level{0, 0} : msg.asks().front();
+                const auto spread = msg.bids().empty() || msg.asks().empty() ? 0 : bestAsk.price - bestBid.price;
 
-                widgets->spreadLabel->setText(QString("Spread: %1").arg(bestAsk.price - bestBid.price));
+                widgets->spreadLabel->setText(QString("Spread: %1").arg(spread));
                 widgets->bboLabel->setText(QString("Bid: %1@%2, Offer: %3@%4")
                                                    .arg(bestBid.quantity)
                                                    .arg(bestBid.price)

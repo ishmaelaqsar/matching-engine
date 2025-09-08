@@ -4,6 +4,10 @@ A C++17 implementation of a matching engine with order book, TCP networking, and
 This project builds a reusable library and provides both a server (`matching_engine`) and a client (
 `matching_engine_client`) executable.
 
+## TODO
+- Trades should be sent to all relevant connections
+  - change ConnectionID to a string like username and store with the order?
+
 ---
 
 ## Features
@@ -146,3 +150,9 @@ cmake --build . --target clean
 ```bash
 rm -rf build/
 ```
+
+## GUI Preview
+
+![Matching Engine GUI Orders Tab](screenshots/gui-orders.png)
+
+![Matching Engine GUI Logs Tab](screenshots/gui-logs.png)
