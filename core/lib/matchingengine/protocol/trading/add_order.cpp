@@ -133,7 +133,8 @@ namespace core::protocol::trading
 
         auto AddOrderResponse::size() const -> size_t
         {
-                return sizeof(StrLen) + f_symbol.length() + sizeof(f_order_id) + sizeof(f_timestamp);
+                return sizeof(StrLen) + f_symbol.length() + sizeof(f_order_id) + sizeof(f_price) + sizeof(f_quantity) +
+                       sizeof(f_side) + sizeof(f_timestamp);
         }
 
         auto AddOrderResponse::symbol() const -> Symbol

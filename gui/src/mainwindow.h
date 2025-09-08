@@ -1,7 +1,6 @@
 #pragma once
 
-#include <QDoubleSpinBox>
-#include <QFormLayout>
+#include <QDateTime>
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
@@ -40,7 +39,8 @@ struct SymbolTabWidgets
         QTextEdit *logText;
         QLabel *lastPriceLabel;
         QLabel *spreadLabel;
-        QDoubleSpinBox *priceSpinBox;
+        QLabel *bboLabel;
+        QSpinBox *priceSpinBox;
         QSpinBox *qtySpinBox;
         QPushButton *buyButton;
         QPushButton *sellButton;
@@ -55,10 +55,17 @@ public:
         explicit MainWindow(QWidget *parent = nullptr);
         ~MainWindow() override;
 
+        static QString formatTimestampMs(const core::Timestamp timestamp)
+        {
+                const QDateTime dt = QDateTime::fromMSecsSinceEpoch(timestamp, Qt::UTC);
+                return dt.toString("dd/MM/yyyy hh:mm:ss.zzz");
+        }
+
+        // Helper for converting integral values to QString with locale-aware formatting
         template<typename T>
         static QString qstr(T value)
         {
-                static_assert(std::is_integral_v<T>, "toQStringWithCommas only supports integral types");
+                static_assert(std::is_integral_v<T>, "qstr only supports integral types");
 
                 const QLocale locale = QLocale::c();
                 if constexpr (std::is_unsigned_v<T>) {
@@ -92,6 +99,7 @@ private:
         std::unique_ptr<Ui::MainWindow> ui; // The UI generated from the .ui file
 
         // --- Tab Management ---
+        // Each symbol tab has its own set of widgets stored in SymbolTabWidgets
         std::unordered_map<QString, SymbolTabWidgets> m_symbolTabs;
         QString m_currentSymbol;
 
@@ -100,9 +108,9 @@ private:
         std::unique_ptr<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> m_workGuard;
         std::thread m_ioThread;
         std::shared_ptr<tcp::Client> m_client;
-        QTimer *m_bookTimer;
+        QTimer *m_bookTimer = nullptr;
 
-        // --- Helpers ---
+        // --- Helper Methods ---
         void startIoThread();
         void stopIoThread();
         bool ensureConnected();
