@@ -31,9 +31,12 @@ TEST(SerDeTest, AddOrderResponse)
 {
         constexpr auto expected_symbol = "EUR/USD";
         constexpr auto expected_order_id = 1;
+        constexpr auto expected_price = 122333444555;
+        constexpr auto expected_quantity = 123456;
+        constexpr auto expected_side = Side::Buy;
         constexpr auto expected_timestamp = 122333444555;
 
-        const AddOrderResponse expected_response = {expected_symbol, expected_order_id, expected_timestamp};
+        const AddOrderResponse expected_response = {expected_symbol, expected_order_id, expected_price, expected_quantity, expected_side, expected_timestamp};
 
         const auto buffer = new unsigned char[expected_response.size()];
         expected_response.serialize(buffer);
@@ -44,5 +47,8 @@ TEST(SerDeTest, AddOrderResponse)
 
         ASSERT_EQ(response.symbol(), expected_symbol);
         ASSERT_EQ(response.order_id(), expected_order_id);
+        ASSERT_EQ(response.price(), expected_price);
+        ASSERT_EQ(response.quantity(), expected_quantity);
+        ASSERT_EQ(response.side(), expected_side);
         ASSERT_EQ(response.timestamp(), expected_timestamp);
 }

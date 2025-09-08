@@ -1,15 +1,26 @@
 #pragma once
 
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QLabel>
 #include <QMainWindow>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QTableWidget>
+#include <QTextEdit>
+#include <QTimer>
+#include <QWidget>
 #include <boost/asio.hpp>
 #include <memory>
 #include <thread>
+#include <unordered_map>
 
 #include <matchingengine/protocol/trading/add_order.h>
 #include <matchingengine/protocol/trading/cancel_order.h>
-#include <matchingengine/protocol/trading/modify_order.h>
+#include <matchingengine/protocol/trading/trade.h>
 #include <matchingengine/protocol/view/get_book.h>
 #include <matchingengine/tcp/client.h>
+#include <matchingengine/types.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -18,40 +29,102 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
+// Structure to hold all widgets for a trading symbol tab
+struct SymbolTabWidgets
+{
+        QWidget *tabWidget;
+        QTableWidget *asksTable;
+        QTableWidget *bidsTable;
+        QTableWidget *ordersTable;
+        QTableWidget *tradesTable;
+        QTextEdit *logText;
+        QLabel *lastPriceLabel;
+        QLabel *spreadLabel;
+        QDoubleSpinBox *priceSpinBox;
+        QSpinBox *qtySpinBox;
+        QPushButton *buyButton;
+        QPushButton *sellButton;
+        QPushButton *cancelButton;
+};
+
+class MainWindow final : public QMainWindow
 {
         Q_OBJECT
 
 public:
-        using AnyRequest =
-                std::variant<core::protocol::view::GetBookRequest, core::protocol::trading::AddOrderRequest,
-                             core::protocol::trading::ModifyOrderRequest, core::protocol::trading::CancelOrderRequest>;
-
         explicit MainWindow(QWidget *parent = nullptr);
         ~MainWindow() override;
 
+        template<typename T>
+        static QString qstr(T value)
+        {
+                static_assert(std::is_integral_v<T>, "toQStringWithCommas only supports integral types");
+
+                const QLocale locale = QLocale::c();
+                if constexpr (std::is_unsigned_v<T>) {
+                        return locale.toString(static_cast<qulonglong>(value));
+                } else {
+                        return locale.toString(static_cast<qlonglong>(value));
+                }
+        }
+
 private slots:
-        void onConnectClicked();
-        void onDisconnectClicked();
-        void onGetClicked();
-        void onAddClicked();
-        void onModifyClicked();
-        void onCancelClicked();
-        void appendLog(const QString &line) const;
-        void appendResponse(const QString &line) const;
+        // --- UI Action Slots ---
+        void onActionConnectTriggered();
+        void onActionDisconnectTriggered();
+        void onActionAddSymbolTriggered();
+        void onAddTabButtonClicked();
+        void onTabCloseRequested(int index);
+        void onTabChanged(int index);
+        void onBuyClicked();
+        void onSellClicked();
+        void onCancelOrderClicked();
+
+        // --- Data Handler Slots (called from network thread) ---
+        void handleGetBookResponse(const core::protocol::view::GetBookResponse &msg);
+        void handleAddOrderResponse(const core::protocol::trading::AddOrderResponse &msg) const;
+        void handleCancelOrderResponse(const core::protocol::trading::CancelOrderResponse &msg);
+        void handleTrade(const core::protocol::trading::Trade &msg) const;
+        void updateOrderStatusFromTrade(core::OrderId orderId, core::Quantity tradeQuantity) const;
+        void appendLog(const QString &message) const;
 
 private:
-        std::unique_ptr<Ui::MainWindow> ui; // generated from .ui
+        std::unique_ptr<Ui::MainWindow> ui; // The UI generated from the .ui file
 
-        // Networking
-        std::unique_ptr<boost::asio::io_context> f_io;
-        std::unique_ptr<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> f_work;
-        std::thread f_io_thread;
-        std::shared_ptr<tcp::Client> f_client;
+        // --- Tab Management ---
+        std::unordered_map<QString, SymbolTabWidgets> m_symbolTabs;
+        QString m_currentSymbol;
 
-        // Helpers
+        // --- Networking ---
+        std::unique_ptr<boost::asio::io_context> m_ioContext;
+        std::unique_ptr<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> m_workGuard;
+        std::thread m_ioThread;
+        std::shared_ptr<tcp::Client> m_client;
+        QTimer *m_bookTimer;
+
+        // --- Helpers ---
         void startIoThread();
         void stopIoThread();
-        void ensureConnected();
-        AnyRequest buildMessageFromForm();
+        bool ensureConnected();
+        void setupTables() const;
+        std::string getCurrentSymbol() const;
+        SymbolTabWidgets *getCurrentTabWidgets();
+        const SymbolTabWidgets *getCurrentTabWidgets() const;
+
+        // --- Tab Management Helpers ---
+        void setupConnections();
+        QWidget *createSymbolTab(const QString &symbol);
+        void addSymbolTab(const QString &symbol);
+        void removeSymbolTab(int index);
+        void refreshOrderBook() const;
+
+        // --- UI Update Helpers ---
+        void updateBidsTable(const std::vector<core::protocol::view::Level> &bids);
+        void updateAsksTable(const std::vector<core::protocol::view::Level> &asks);
+        void addOrderToTable(core::OrderId orderId, core::Side side, core::Price price, core::Quantity quantity,
+                             core::Timestamp timestamp) const;
+        void removeOrderFromTable(core::OrderId orderId) const;
+        void addTradeToTable(core::TradeId tradeId, core::Price price, core::Quantity quantity,
+                             core::OrderId sourceOrder, core::OrderId matchedOrder, core::Timestamp timestamp) const;
+        void sendAddOrderRequest(core::Side side);
 };

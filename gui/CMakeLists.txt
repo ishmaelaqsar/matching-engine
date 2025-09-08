@@ -11,6 +11,11 @@ add_executable(matching_engine_gui
         ${GUI_SOURCES}
 )
 
+set_target_properties(matching_engine_gui
+        PROPERTIES
+        WIN32_EXECUTABLE TRUE
+)
+
 target_include_directories(matching_engine_gui
         PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}

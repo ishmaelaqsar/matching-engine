@@ -1,6 +1,6 @@
 #include <matchingengine/orderbook/level.h>
 
-#include <boost/chrono/chrono.hpp>
+#include <chrono>
 
 namespace orderbook
 {
@@ -49,7 +49,9 @@ namespace orderbook
                 -> std::vector<Trade>
         {
                 auto trades = std::vector<Trade>();
-                auto now = std::chrono::system_clock::now().time_since_epoch().count();
+                auto now = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())
+                                   .time_since_epoch()
+                                   .count();
 
                 for (auto it = f_orders.begin(); it != f_orders.end() && order->quantity() > 0;) {
                         if (Order *target_order = it->get(); target_order->quantity() == order->quantity()) {

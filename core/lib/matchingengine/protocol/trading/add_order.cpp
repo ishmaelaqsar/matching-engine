@@ -75,8 +75,14 @@ namespace core::protocol::trading
                 return f_side;
         }
 
-        AddOrderResponse::AddOrderResponse(Symbol symbol, const OrderId order_id, const Timestamp timestamp) :
-            f_symbol(std::move(symbol)), f_order_id(order_id), f_timestamp(timestamp)
+        AddOrderResponse::AddOrderResponse(Symbol symbol, const OrderId order_id, const Price price,
+                                           const Quantity quantity, const Side side, const Timestamp timestamp) :
+            f_symbol(std::move(symbol)),
+            f_order_id(order_id),
+            f_price(price),
+            f_quantity(quantity),
+            f_side(side),
+            f_timestamp(timestamp)
         {}
 
         auto AddOrderResponse::type() -> MessageType
@@ -89,6 +95,9 @@ namespace core::protocol::trading
                 size_t offset = 0;
                 serialize_string(f_symbol, dst, &offset);
                 serialize_uint64(f_order_id, dst, &offset);
+                serialize_uint64(f_price, dst, &offset);
+                serialize_uint64(f_quantity, dst, &offset);
+                serialize_uint8(static_cast<uint8_t>(f_side), dst, &offset);
                 serialize_uint64(f_timestamp, dst, &offset);
         }
 
@@ -97,6 +106,9 @@ namespace core::protocol::trading
                 size_t offset = 0;
                 f_symbol = deserialize_string(src, &offset);
                 f_order_id = deserialize_uint64(src, &offset);
+                f_price = deserialize_uint64(src, &offset);
+                f_quantity = deserialize_uint64(src, &offset);
+                f_side = static_cast<Side>(deserialize_uint8(src, &offset));
                 f_timestamp = deserialize_uint64(src, &offset);
         }
 
@@ -106,6 +118,9 @@ namespace core::protocol::trading
                 os << "AddOrderResponse{";
                 os << "symbol: " << f_symbol << ", ";
                 os << "order_id: " << f_order_id << ", ";
+                os << "price: " << f_price << ", ";
+                os << "quantity: " << f_quantity << ", ";
+                os << "side: " << f_side << ", ";
                 os << "timestamp: " << f_timestamp;
                 os << "}";
                 return os.str();
@@ -129,6 +144,21 @@ namespace core::protocol::trading
         auto AddOrderResponse::order_id() const -> OrderId
         {
                 return f_order_id;
+        }
+
+        auto AddOrderResponse::price() const -> Price
+        {
+                return f_price;
+        }
+
+        auto AddOrderResponse::quantity() const -> Quantity
+        {
+                return f_quantity;
+        }
+
+        auto AddOrderResponse::side() const -> Side
+        {
+                return f_side;
         }
 
         auto AddOrderResponse::timestamp() const -> Timestamp

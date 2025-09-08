@@ -1,7 +1,7 @@
 #include <matchingengine/engine.h>
 
-#include <boost/chrono.hpp>
 #include <boost/log/trivial.hpp>
+#include <chrono>
 
 #include <matchingengine/protocol/message.h>
 #include <matchingengine/protocol/trading/add_order.h>
@@ -31,8 +31,11 @@ namespace orderbook
                         BOOST_LOG_TRIVIAL(debug)
                                 << "Received request from connection ID=" << inbound_payload.connectionId;
 
-                        const auto timestamp = static_cast<core::Timestamp>(
-                                boost::chrono::system_clock::now().time_since_epoch().count() + i);
+                        const auto timestamp =
+                                static_cast<core::Timestamp>(std::chrono::time_point_cast<std::chrono::milliseconds>(
+                                                                     std::chrono::system_clock::now())
+                                                                     .time_since_epoch()
+                                                                     .count());
 
                         switch (inbound_payload.header.type) {
                                 case core::protocol::MessageType::GetBookRequest: {
@@ -99,9 +102,10 @@ namespace orderbook
                 auto [order_id, trades] =
                         book.add_order(request.price(), request.quantity(), request.side(), timestamp);
 
-                auto outbound_payload =
-                        serialize(payload.connectionId,
-                                  core::protocol::trading::AddOrderResponse(request.symbol(), order_id, timestamp));
+                auto outbound_payload = serialize(
+                        payload.connectionId,
+                        core::protocol::trading::AddOrderResponse(request.symbol(), order_id, request.price(),
+                                                                  request.quantity(), request.side(), timestamp));
                 if (!f_outbound_buffer->push(*outbound_payload)) {
                         BOOST_LOG_TRIVIAL(warning) << "Outbound buffer is full, dropping message";
                 }

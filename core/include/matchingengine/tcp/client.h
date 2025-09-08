@@ -13,7 +13,7 @@ namespace tcp
         {
         public:
                 template<typename SubMessage>
-                using ResponseHandler = std::function<void(std::unique_ptr<core::protocol::Message<SubMessage>>)>;
+                using ResponseHandler = std::function<void(const SubMessage &)>;
 
                 Client(boost::asio::io_context &io_context, const std::string &host, unsigned short port);
 
@@ -47,10 +47,13 @@ namespace tcp
         template<typename SubMessage>
         void Client::register_handler(ResponseHandler<SubMessage> handler)
         {
+                static_assert(std::is_base_of_v<core::protocol::Message<SubMessage>, SubMessage>,
+                              "SubMessage must inherit from Message<SubMessage>");
+
                 f_handlers[SubMessage{}.type()] = [h = std::move(handler)](const std::vector<unsigned char> &buffer) {
-                        auto msg = std::make_unique<SubMessage>();
-                        msg->deserialize(buffer.data());
-                        h(std::move(msg));
+                        SubMessage msg{};
+                        msg.deserialize(buffer.data());
+                        h(msg);
                 };
         }
 

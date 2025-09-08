@@ -1,11 +1,25 @@
 #include <boost/asio/io_context.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
 
 #include <matchingengine/engine.h>
 #include <matchingengine/tcp/server.h>
 
+void init_logging()
+{
+#ifdef NDEBUG
+        // Release mode: only info and above
+        boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+#else
+        // Debug mode: all logs
+        boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
+#endif
+}
+
 int main()
 {
+        init_logging();
         const auto inbound = std::make_shared<core::RingBuffer<core::Payload>>();
         const auto outbound = std::make_shared<core::RingBuffer<core::Payload>>();
         try {
