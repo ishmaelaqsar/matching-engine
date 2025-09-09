@@ -7,6 +7,10 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QSplitter>
+#include <utility>
+
+static constexpr auto Buy = "BUY";
+static constexpr auto Sell = "SELL";
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(std::make_unique<Ui::MainWindow>())
 {
@@ -17,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(std::make_uniq
         // Initialize with the default BTC/USD tab
         m_currentSymbol = ui->symbolTabs->tabText(0);
 
-        SymbolTabWidgets btcWidgets;
+        SymbolTabWidgets btcWidgets{};
         btcWidgets.tabWidget = ui->btcTab;
         btcWidgets.asksTable = ui->asksTable;
         btcWidgets.bidsTable = ui->bidsTable;
@@ -31,10 +35,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(std::make_uniq
         btcWidgets.qtySpinBox = ui->qtySpinBox;
         btcWidgets.buyButton = ui->buyButton;
         btcWidgets.sellButton = ui->sellButton;
+        btcWidgets.modifyButton = ui->modifyOrderButton;
+        btcWidgets.cancelButton = ui->cancelOrderButton;
 
-        // Cancel button
-        btcWidgets.cancelButton = new QPushButton("Cancel Selected Order", ui->ordersTab);
-        ui->ordersTab->layout()->addWidget(btcWidgets.cancelButton);
+        connect(btcWidgets.modifyButton, &QPushButton::clicked, this, &MainWindow::onModifyOrderClicked);
+
         connect(btcWidgets.cancelButton, &QPushButton::clicked, this, &MainWindow::onCancelOrderClicked);
 
         m_symbolTabs[m_currentSymbol] = btcWidgets;
@@ -46,6 +51,17 @@ MainWindow::~MainWindow()
 }
 
 // ===================== SETUP =====================
+
+void MainWindow::setupTables() const
+{
+        const auto tables = {ui->bidsTable, ui->asksTable, ui->ordersTable, ui->tradesTable};
+        for (auto *table: tables) {
+                table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+                table->setSelectionBehavior(QAbstractItemView::SelectRows);
+                table->setSelectionMode(QAbstractItemView::SingleSelection);
+                table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        }
+}
 
 void MainWindow::setupConnections()
 {
@@ -59,17 +75,6 @@ void MainWindow::setupConnections()
 
         connect(ui->buyButton, &QPushButton::clicked, this, &MainWindow::onBuyClicked);
         connect(ui->sellButton, &QPushButton::clicked, this, &MainWindow::onSellClicked);
-}
-
-void MainWindow::setupTables() const
-{
-        const auto tables = {ui->bidsTable, ui->asksTable, ui->ordersTable, ui->tradesTable};
-        for (auto *table: tables) {
-                table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-                table->setSelectionBehavior(QAbstractItemView::SelectRows);
-                table->setSelectionMode(QAbstractItemView::SingleSelection);
-                table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-        }
 }
 
 // ===================== CREATE TAB =====================
@@ -122,9 +127,9 @@ QWidget *MainWindow::createSymbolTab(const QString &symbol)
         priceSpinBox->setMaximum(1000000000);
         auto *qtySpinBox = new QSpinBox(tabWidget);
         qtySpinBox->setMaximum(1000000000);
-        auto *buyButton = new QPushButton("BUY", tabWidget);
+        auto *buyButton = new QPushButton(Buy, tabWidget);
         buyButton->setStyleSheet("background-color:#2ecc71;color:white;font-weight:bold;padding:8px;");
-        auto *sellButton = new QPushButton("SELL", tabWidget);
+        auto *sellButton = new QPushButton(Sell, tabWidget);
         sellButton->setStyleSheet("background-color:#e74c3c;color:white;font-weight:bold;padding:8px;");
 
         orderEntryLayout->addWidget(new QLabel("Price:", tabWidget));
@@ -150,9 +155,25 @@ QWidget *MainWindow::createSymbolTab(const QString &symbol)
         ordersTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
         ordersLayout->addWidget(ordersTable);
 
+        // === MODIFIED: Create a horizontal layout for action buttons ===
+        auto *orderActionsLayout = new QHBoxLayout();
+        orderActionsLayout->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum));
+
+        // Modify button
+        auto *modifyButton = new QPushButton("Modify Selected Order", ordersTab);
+        modifyButton->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold; padding: 5px;");
+        orderActionsLayout->addWidget(modifyButton);
+        connect(modifyButton, &QPushButton::clicked, this, &MainWindow::onModifyOrderClicked);
+
+        // Cancel button
         auto *cancelButton = new QPushButton("Cancel Selected Order", ordersTab);
-        ordersLayout->addWidget(cancelButton);
+        cancelButton->setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold; padding: 5px;");
+        orderActionsLayout->addWidget(cancelButton);
         connect(cancelButton, &QPushButton::clicked, this, &MainWindow::onCancelOrderClicked);
+
+        ordersLayout->addLayout(orderActionsLayout);
+        // ===============================================================
+
         userDataTabs->addTab(ordersTab, "My Open Orders");
 
         // Trades tab
@@ -183,7 +204,7 @@ QWidget *MainWindow::createSymbolTab(const QString &symbol)
         connect(sellButton, &QPushButton::clicked, this, &MainWindow::onSellClicked);
 
         // Store widgets
-        SymbolTabWidgets widgets;
+        SymbolTabWidgets widgets{};
         widgets.tabWidget = tabWidget;
         widgets.asksTable = asksTable;
         widgets.bidsTable = bidsTable;
@@ -198,6 +219,7 @@ QWidget *MainWindow::createSymbolTab(const QString &symbol)
         widgets.buyButton = buyButton;
         widgets.sellButton = sellButton;
         widgets.cancelButton = cancelButton;
+        widgets.modifyButton = modifyButton;
 
         m_symbolTabs[symbol] = widgets;
 
@@ -205,39 +227,6 @@ QWidget *MainWindow::createSymbolTab(const QString &symbol)
 }
 
 // ===================== TAB MANAGEMENT =====================
-
-void MainWindow::addSymbolTab(const QString &symbol)
-{
-        if (m_symbolTabs.find(symbol) != m_symbolTabs.end()) {
-                // switch to existing
-                for (int i = 0; i < ui->symbolTabs->count(); ++i) {
-                        if (ui->symbolTabs->tabText(i) == symbol) {
-                                ui->symbolTabs->setCurrentIndex(i);
-                                return;
-                        }
-                }
-        }
-        QWidget *tabWidget = createSymbolTab(symbol);
-        const int index = ui->symbolTabs->addTab(tabWidget, symbol);
-        ui->symbolTabs->setCurrentIndex(index);
-
-        if (m_client) {
-                core::protocol::view::GetBookRequest req{symbol.toStdString()};
-                m_client->request(std::move(req));
-        }
-}
-
-void MainWindow::removeSymbolTab(const int index)
-{
-        if (ui->symbolTabs->count() <= 1) {
-                QMessageBox::information(this, "Cannot Close", "At least one symbol tab must remain open.");
-                return;
-        }
-        const QString symbol = ui->symbolTabs->tabText(index);
-        ui->symbolTabs->removeTab(index);
-        m_symbolTabs.erase(symbol);
-        m_currentSymbol = ui->symbolTabs->tabText(ui->symbolTabs->currentIndex());
-}
 
 SymbolTabWidgets *MainWindow::getCurrentTabWidgets()
 {
@@ -251,41 +240,48 @@ const SymbolTabWidgets *MainWindow::getCurrentTabWidgets() const
         return it != m_symbolTabs.end() ? &it->second : nullptr;
 }
 
+void MainWindow::addSymbolTab(const QString &symbol)
+{
+        if (m_symbolTabs.find(symbol) != m_symbolTabs.end()) {
+                // switch to existing
+                for (auto i = 0; i < ui->symbolTabs->count(); ++i) {
+                        if (ui->symbolTabs->tabText(i) == symbol) {
+                                ui->symbolTabs->setCurrentIndex(i);
+                                return;
+                        }
+                }
+        }
+        const auto tabWidget = createSymbolTab(symbol);
+        const auto index = ui->symbolTabs->addTab(tabWidget, symbol);
+        ui->symbolTabs->setCurrentIndex(index);
+
+        if (m_client) {
+                const core::protocol::view::GetBookRequest req{symbol.toStdString()};
+                m_client->request(req);
+        }
+}
+
+void MainWindow::removeSymbolTab(const int index)
+{
+        if (ui->symbolTabs->count() <= 1) {
+                QMessageBox::information(this, "Cannot Close", "At least one symbol tab must remain open.");
+                return;
+        }
+        const auto symbol = ui->symbolTabs->tabText(index);
+        ui->symbolTabs->removeTab(index);
+        m_symbolTabs.erase(symbol);
+        m_currentSymbol = ui->symbolTabs->tabText(ui->symbolTabs->currentIndex());
+}
+
 void MainWindow::refreshOrderBook() const
 {
         if (m_client) {
                 core::protocol::view::GetBookRequest req{getCurrentSymbol()};
-                m_client->request(std::move(req));
+                m_client->request(req);
         }
 }
 
 // ===================== UI ACTION SLOTS =====================
-
-void MainWindow::onActionAddSymbolTriggered()
-{
-        onAddTabButtonClicked();
-}
-
-void MainWindow::onAddTabButtonClicked()
-{
-        bool ok;
-        const QString symbol = QInputDialog::getText(this, "Add Symbol",
-                                                     "Enter symbol (e.g., ETH/USD, AAPL):", QLineEdit::Normal, "", &ok);
-        if (ok && !symbol.isEmpty()) addSymbolTab(symbol.toUpper());
-}
-
-void MainWindow::onTabCloseRequested(const int index)
-{
-        removeSymbolTab(index);
-}
-
-void MainWindow::onTabChanged(const int index)
-{
-        if (index >= 0 && index < ui->symbolTabs->count()) {
-                m_currentSymbol = ui->symbolTabs->tabText(index);
-                refreshOrderBook();
-        }
-}
 
 void MainWindow::onActionConnectTriggered()
 {
@@ -293,30 +289,35 @@ void MainWindow::onActionConnectTriggered()
                 appendLog("Already connected.");
                 return;
         }
+
         bool ok;
-        const QString server = QInputDialog::getText(this, "Connect to Server", "Enter Host:Port", QLineEdit::Normal,
-                                                     "127.0.0.1:8080", &ok);
+        const auto server = QInputDialog::getText(this, "Connect to Server", "Enter Host:Port", QLineEdit::Normal,
+                                                  "127.0.0.1:8080", &ok);
         if (!ok || server.isEmpty()) return;
 
-        QStringList parts = server.split(':');
+        auto parts = server.split(':');
         if (parts.size() != 2) {
                 QMessageBox::warning(this, "Invalid Input", "Format must be host:port");
                 return;
         }
-        std::string host = parts[0].toStdString();
-        quint16 port = parts[1].toUShort();
+        auto host = parts[0].toStdString();
+        auto port = parts[1].toUShort();
 
         m_ioContext = std::make_unique<boost::asio::io_context>();
         m_workGuard = std::make_unique<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>>(
                 boost::asio::make_work_guard(*m_ioContext));
         m_client = std::make_shared<tcp::Client>(*m_ioContext, host, port);
 
-        auto invoke = [this](auto function) { QMetaObject::invokeMethod(this, function, Qt::QueuedConnection); };
+        auto invoke = [&](auto function) -> void {
+                QMetaObject::invokeMethod(this, std::move(function), Qt::QueuedConnection);
+        };
 
         m_client->register_handler<core::protocol::view::GetBookResponse>(
                 [invoke, this](const auto &msg) { invoke([this, msg] { handleGetBookResponse(msg); }); });
         m_client->register_handler<core::protocol::trading::AddOrderResponse>(
                 [invoke, this](const auto &msg) { invoke([this, msg] { handleAddOrderResponse(msg); }); });
+        m_client->register_handler<core::protocol::trading::ModifyOrderResponse>(
+                [invoke, this](const auto &msg) { invoke([this, msg] { handleModifyOrderResponse(msg); }); });
         m_client->register_handler<core::protocol::trading::CancelOrderResponse>(
                 [invoke, this](const auto &msg) { invoke([this, msg] { handleCancelOrderResponse(msg); }); });
         m_client->register_handler<core::protocol::trading::Trade>(
@@ -327,8 +328,8 @@ void MainWindow::onActionConnectTriggered()
         appendLog(QString("Connecting to %1:%2...").arg(QString::fromStdString(host)).arg(port));
         ui->statusbar->showMessage(QString("Connected to %1:%2").arg(QString::fromStdString(host)).arg(port), 5000);
 
-        core::protocol::view::GetBookRequest req{getCurrentSymbol()};
-        m_client->request(std::move(req));
+        const core::protocol::view::GetBookRequest req{getCurrentSymbol()};
+        m_client->request(req);
 
         m_bookTimer = new QTimer(this);
         connect(m_bookTimer, &QTimer::timeout, this, &MainWindow::refreshOrderBook);
@@ -350,13 +351,100 @@ void MainWindow::onActionDisconnectTriggered()
         ui->statusbar->showMessage("Disconnected", 5000);
 }
 
+void MainWindow::onActionAddSymbolTriggered()
+{
+        onAddTabButtonClicked();
+}
+
+void MainWindow::onAddTabButtonClicked()
+{
+        bool ok;
+        const auto symbol = QInputDialog::getText(this, "Add Symbol",
+                                                  "Enter symbol (e.g., ETH/USD, AAPL):", QLineEdit::Normal, "", &ok);
+        if (ok && !symbol.isEmpty()) addSymbolTab(symbol.toUpper());
+}
+
+void MainWindow::onTabCloseRequested(const int index)
+{
+        removeSymbolTab(index);
+}
+
+void MainWindow::onTabChanged(const int index)
+{
+        if (index >= 0 && index < ui->symbolTabs->count()) {
+                m_currentSymbol = ui->symbolTabs->tabText(index);
+                refreshOrderBook();
+        }
+}
+
 void MainWindow::onBuyClicked()
 {
-        sendAddOrderRequest(core::Side::Buy);
+        if (!ensureConnected()) return;
+        const auto *widgets = getCurrentTabWidgets();
+        if (!widgets) return;
+
+        const auto price = static_cast<core::Price>(widgets->priceSpinBox->value());
+        const auto quantity = static_cast<core::Quantity>(widgets->qtySpinBox->value());
+        sendAddOrderRequest(price, quantity, core::Side::Buy);
 }
 void MainWindow::onSellClicked()
 {
-        sendAddOrderRequest(core::Side::Sell);
+        if (!ensureConnected()) return;
+        const auto *widgets = getCurrentTabWidgets();
+        if (!widgets) return;
+
+        const auto price = static_cast<core::Price>(widgets->priceSpinBox->value());
+        const auto quantity = static_cast<core::Quantity>(widgets->qtySpinBox->value());
+        sendAddOrderRequest(price, quantity, core::Side::Sell);
+}
+
+void MainWindow::onModifyOrderClicked()
+{
+        if (!ensureConnected()) return;
+        const auto *widgets = getCurrentTabWidgets();
+        if (!widgets) return;
+
+        auto selectedItems = widgets->ordersTable->selectedItems();
+        if (selectedItems.isEmpty()) {
+                QMessageBox::information(this, "No Order Selected", "Please select an order to modify.");
+                return;
+        }
+
+        const auto row = selectedItems.first()->row();
+        const core::OrderId orderId = widgets->ordersTable->item(row, 1)->text().toULongLong();
+        const auto side = widgets->ordersTable->item(row, 2)->text() == Buy ? core::Side::Buy : core::Side::Sell;
+        const core::Price currentPrice = widgets->ordersTable->item(row, 3)->text().toULongLong();
+        const core::Quantity currentQuantity = widgets->ordersTable->item(row, 4)->text().toULongLong();
+
+        bool priceOk;
+        const auto newPriceStr = QInputDialog::getText(this, "Modify Order", "Enter new price:", QLineEdit::Normal,
+                                                       QString::number(currentPrice), &priceOk);
+        if (!priceOk) return;
+        const auto newPrice = newPriceStr.toULongLong();
+
+        bool qtyOk;
+        const auto newQuantityStr =
+                QInputDialog::getText(this, "Modify Order", "Enter new quantity:", QLineEdit::Normal,
+                                      QString::number(currentQuantity), &qtyOk);
+        if (!qtyOk) return;
+        const auto newQuantity = newQuantityStr.toULongLong();
+
+        if (newPrice != currentPrice) {
+                const auto reply = QMessageBox::question(
+                        this, "Confirm Action",
+                        "Price is being modified which will lead to a CancelAdd action. Do you want to continue?",
+                        QMessageBox::Yes | QMessageBox::No);
+                if (reply != QMessageBox::Yes) return;
+
+                sendCancelRequest(orderId);
+                sendAddOrderRequest(newPrice, newQuantity, side);
+                return;
+        }
+
+        const core::protocol::trading::ModifyOrderRequest req{getCurrentSymbol(), orderId, newQuantity};
+        m_client->request(req);
+
+        appendLog(QString("Sent ModifyOrderRequest for Order ID %1: New Quantity=%2").arg(orderId).arg(newQuantity));
 }
 
 void MainWindow::onCancelOrderClicked()
@@ -371,32 +459,33 @@ void MainWindow::onCancelOrderClicked()
                 return;
         }
 
-        const int row = selectedItems.first()->row();
+        const auto row = selectedItems.first()->row();
         const core::OrderId orderId = widgets->ordersTable->item(row, 1)->text().toULongLong();
-        core::protocol::trading::CancelOrderRequest req{getCurrentSymbol(), orderId};
-        m_client->request(std::move(req));
-        appendLog(QString("Sent CancelOrderRequest for Order ID: %1").arg(orderId));
+        sendCancelRequest(orderId);
 }
 
-void MainWindow::sendAddOrderRequest(const core::Side side)
+void MainWindow::sendAddOrderRequest(const core::Price price, const core::Quantity quantity, const core::Side side)
 {
-        if (!ensureConnected()) return;
-        const auto *widgets = getCurrentTabWidgets();
-        if (!widgets) return;
+        const auto symbol = getCurrentSymbol();
 
-        const std::string symbol = getCurrentSymbol();
-        const core::Price price = static_cast<core::Price>(widgets->priceSpinBox->value());
-        const core::Quantity quantity = static_cast<core::Quantity>(widgets->qtySpinBox->value());
         if (quantity == 0) {
                 QMessageBox::warning(this, "Invalid Quantity", "Quantity cannot be zero.");
                 return;
         }
-        core::protocol::trading::AddOrderRequest req{symbol, price, quantity, side};
-        m_client->request(std::move(req));
+
+        const core::protocol::trading::AddOrderRequest req{symbol, price, quantity, side};
+        m_client->request(req);
         appendLog(QString("Sent AddOrderRequest: %1 %2 @ %3")
-                          .arg(side == core::Side::Buy ? "BUY" : "SELL")
+                          .arg(side == core::Side::Buy ? Buy : Sell)
                           .arg(quantity)
                           .arg(price));
+}
+
+void MainWindow::sendCancelRequest(const core::OrderId orderId) const
+{
+        const core::protocol::trading::CancelOrderRequest req{getCurrentSymbol(), orderId};
+        m_client->request(req);
+        appendLog(QString("Sent CancelOrderRequest for Order ID: %1").arg(orderId));
 }
 
 // ===================== DATA HANDLER SLOTS =====================
@@ -426,6 +515,20 @@ void MainWindow::handleAddOrderResponse(const core::protocol::trading::AddOrderR
         addOrderToTable(msg.order_id(), msg.side(), msg.price(), msg.quantity(), msg.timestamp());
 }
 
+void MainWindow::handleModifyOrderResponse(const core::protocol::trading::ModifyOrderResponse &msg)
+{
+        if (const auto *widgets = getCurrentTabWidgets()) {
+                for (auto i = 0; i < widgets->ordersTable->rowCount(); ++i) {
+                        if (const auto *item = widgets->ordersTable->item(i, 1);
+                            item->text().toULongLong() == msg.order_id()) {
+                                auto *qtyItem = widgets->ordersTable->item(i, 4);
+                                qtyItem->setText(QString::number(msg.quantity()));
+                                break;
+                        }
+                }
+        }
+}
+
 void MainWindow::handleCancelOrderResponse(const core::protocol::trading::CancelOrderResponse &msg)
 {
         if (msg.success()) {
@@ -452,79 +555,10 @@ void MainWindow::handleTrade(const core::protocol::trading::Trade &msg) const
 
 // ===================== UI UPDATE HELPERS =====================
 
-void MainWindow::updateBidsTable(const std::vector<core::protocol::view::Level> &bids)
-{
-        if (const auto *widgets = getCurrentTabWidgets()) {
-                widgets->bidsTable->setRowCount(bids.size());
-                for (size_t i = 0; i < bids.size(); ++i) {
-                        const auto &l = bids[i];
-                        widgets->bidsTable->setItem(i, 0, new QTableWidgetItem(QString::number(l.price)));
-                        widgets->bidsTable->setItem(i, 1, new QTableWidgetItem(QString::number(l.quantity)));
-                        widgets->bidsTable->setItem(i, 2, new QTableWidgetItem(QString::number(l.price * l.quantity)));
-                }
-        }
-}
-
-void MainWindow::updateAsksTable(const std::vector<core::protocol::view::Level> &asks)
-{
-        if (const auto *widgets = getCurrentTabWidgets()) {
-                widgets->asksTable->setRowCount(asks.size());
-                for (size_t i = 0; i < asks.size(); ++i) {
-                        const auto &l = asks[i];
-                        widgets->asksTable->setItem(i, 0, new QTableWidgetItem(QString::number(l.price)));
-                        widgets->asksTable->setItem(i, 1, new QTableWidgetItem(QString::number(l.quantity)));
-                        widgets->asksTable->setItem(i, 2, new QTableWidgetItem(QString::number(l.price * l.quantity)));
-                }
-        }
-}
-
-void MainWindow::addOrderToTable(const core::OrderId orderId, const core::Side side, const core::Price price,
-                                 const core::Quantity quantity, const core::Timestamp timestamp) const
-{
-        if (auto *widgets = getCurrentTabWidgets()) {
-                const int row = widgets->ordersTable->rowCount();
-                widgets->ordersTable->insertRow(row);
-                widgets->ordersTable->setItem(row, 0, new QTableWidgetItem(formatTimestampMs(timestamp)));
-                widgets->ordersTable->setItem(row, 1, new QTableWidgetItem(QString::number(orderId)));
-                widgets->ordersTable->setItem(row, 2, new QTableWidgetItem(side == core::Side::Buy ? "BUY" : "SELL"));
-                widgets->ordersTable->setItem(row, 3, new QTableWidgetItem(QString::number(price)));
-                widgets->ordersTable->setItem(row, 4, new QTableWidgetItem(QString::number(quantity)));
-                widgets->ordersTable->setItem(row, 5, new QTableWidgetItem("OPEN"));
-        }
-}
-
-void MainWindow::removeOrderFromTable(const core::OrderId orderId) const
-{
-        if (auto *widgets = getCurrentTabWidgets()) {
-                for (int i = 0; i < widgets->ordersTable->rowCount(); ++i) {
-                        if (widgets->ordersTable->item(i, 1)->text().toULongLong() == orderId) {
-                                widgets->ordersTable->removeRow(i);
-                                break;
-                        }
-                }
-        }
-}
-
-void MainWindow::addTradeToTable(const core::TradeId tradeId, const core::Price price, const core::Quantity quantity,
-                                 const core::OrderId sourceOrder, const core::OrderId matchedOrder,
-                                 const core::Timestamp timestamp) const
-{
-        if (auto *widgets = getCurrentTabWidgets()) {
-                const int row = widgets->tradesTable->rowCount();
-                widgets->tradesTable->insertRow(row);
-                widgets->tradesTable->setItem(row, 0, new QTableWidgetItem(formatTimestampMs(timestamp)));
-                widgets->tradesTable->setItem(row, 1, new QTableWidgetItem(QString::number(tradeId)));
-                widgets->tradesTable->setItem(row, 2, new QTableWidgetItem(QString::number(price)));
-                widgets->tradesTable->setItem(row, 3, new QTableWidgetItem(QString::number(quantity)));
-                widgets->tradesTable->setItem(row, 4, new QTableWidgetItem(QString::number(sourceOrder)));
-                widgets->tradesTable->setItem(row, 5, new QTableWidgetItem(QString::number(matchedOrder)));
-        }
-}
-
 void MainWindow::updateOrderStatusFromTrade(const core::OrderId orderId, const core::Quantity tradeQuantity) const
 {
         if (auto *widgets = getCurrentTabWidgets()) {
-                for (int i = 0; i < widgets->ordersTable->rowCount(); ++i) {
+                for (auto i = 0; i < widgets->ordersTable->rowCount(); ++i) {
                         if (const auto *item = widgets->ordersTable->item(i, 1);
                             item->text().toULongLong() == orderId) {
                                 auto *qtyItem = widgets->ordersTable->item(i, 4);
@@ -541,7 +575,76 @@ void MainWindow::appendLog(const QString &message) const
 {
         if (auto *widgets = getCurrentTabWidgets()) {
                 widgets->logText->append(
-                        QString("[%1] %2").arg(QDateTime::currentDateTime().toString("HH:mm:ss")).arg(message));
+                        QString("[%1] %2").arg(QDateTime::currentDateTime().toString("HH:mm:ss"), message));
+        }
+}
+
+void MainWindow::updateBidsTable(const std::vector<core::protocol::view::Level> &bids)
+{
+        if (const auto *widgets = getCurrentTabWidgets()) {
+                widgets->bidsTable->setRowCount(static_cast<int>(bids.size()));
+                for (auto i = 0; i < bids.size(); ++i) {
+                        const auto &l = bids[i];
+                        widgets->bidsTable->setItem(i, 0, new QTableWidgetItem(QString::number(l.price)));
+                        widgets->bidsTable->setItem(i, 1, new QTableWidgetItem(QString::number(l.quantity)));
+                        widgets->bidsTable->setItem(i, 2, new QTableWidgetItem(QString::number(l.price * l.quantity)));
+                }
+        }
+}
+
+void MainWindow::updateAsksTable(const std::vector<core::protocol::view::Level> &asks)
+{
+        if (const auto *widgets = getCurrentTabWidgets()) {
+                widgets->asksTable->setRowCount(static_cast<int>(asks.size()));
+                for (auto i = 0; i < asks.size(); ++i) {
+                        const auto &l = asks[i];
+                        widgets->asksTable->setItem(i, 0, new QTableWidgetItem(QString::number(l.price)));
+                        widgets->asksTable->setItem(i, 1, new QTableWidgetItem(QString::number(l.quantity)));
+                        widgets->asksTable->setItem(i, 2, new QTableWidgetItem(QString::number(l.price * l.quantity)));
+                }
+        }
+}
+
+void MainWindow::addOrderToTable(const core::OrderId orderId, const core::Side side, const core::Price price,
+                                 const core::Quantity quantity, const core::Timestamp timestamp) const
+{
+        if (auto *widgets = getCurrentTabWidgets()) {
+                const auto row = widgets->ordersTable->rowCount();
+                widgets->ordersTable->insertRow(row);
+                widgets->ordersTable->setItem(row, 0, new QTableWidgetItem(formatTimestampMs(timestamp)));
+                widgets->ordersTable->setItem(row, 1, new QTableWidgetItem(QString::number(orderId)));
+                widgets->ordersTable->setItem(row, 2, new QTableWidgetItem(side == core::Side::Buy ? Buy : Sell));
+                widgets->ordersTable->setItem(row, 3, new QTableWidgetItem(QString::number(price)));
+                widgets->ordersTable->setItem(row, 4, new QTableWidgetItem(QString::number(quantity)));
+                widgets->ordersTable->setItem(row, 5, new QTableWidgetItem("OPEN"));
+        }
+}
+
+void MainWindow::removeOrderFromTable(const core::OrderId orderId) const
+{
+        if (auto *widgets = getCurrentTabWidgets()) {
+                for (auto i = 0; i < widgets->ordersTable->rowCount(); ++i) {
+                        if (widgets->ordersTable->item(i, 1)->text().toULongLong() == orderId) {
+                                widgets->ordersTable->removeRow(i);
+                                break;
+                        }
+                }
+        }
+}
+
+void MainWindow::addTradeToTable(const core::TradeId tradeId, const core::Price price, const core::Quantity quantity,
+                                 const core::OrderId sourceOrder, const core::OrderId matchedOrder,
+                                 const core::Timestamp timestamp) const
+{
+        if (auto *widgets = getCurrentTabWidgets()) {
+                const auto row = widgets->tradesTable->rowCount();
+                widgets->tradesTable->insertRow(row);
+                widgets->tradesTable->setItem(row, 0, new QTableWidgetItem(formatTimestampMs(timestamp)));
+                widgets->tradesTable->setItem(row, 1, new QTableWidgetItem(QString::number(tradeId)));
+                widgets->tradesTable->setItem(row, 2, new QTableWidgetItem(QString::number(price)));
+                widgets->tradesTable->setItem(row, 3, new QTableWidgetItem(QString::number(quantity)));
+                widgets->tradesTable->setItem(row, 4, new QTableWidgetItem(QString::number(sourceOrder)));
+                widgets->tradesTable->setItem(row, 5, new QTableWidgetItem(QString::number(matchedOrder)));
         }
 }
 

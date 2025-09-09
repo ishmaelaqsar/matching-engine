@@ -6,7 +6,6 @@
 
 namespace core::protocol::trading
 {
-
         Trade::Trade(Symbol symbol, const TradeId id, const Price price, const Quantity quantity,
                      const Timestamp timestamp, const OrderId source_order, const OrderId matched_order) :
             f_symbol(std::move(symbol)),
@@ -44,6 +43,11 @@ namespace core::protocol::trading
                 f_matched_order = deserialize_uint64(src, &offset);
         }
 
+        auto Trade::print(std::ostream &os) const -> void
+        {
+                os << to_string();
+        }
+
         auto Trade::to_string() const -> std::string
         {
                 std::ostringstream os;
@@ -56,11 +60,6 @@ namespace core::protocol::trading
                 os << "matched_order: " << f_matched_order;
                 os << "}";
                 return os.str();
-        }
-
-        auto Trade::print(std::ostream &os) const -> void
-        {
-                os << to_string();
         }
 
         auto Trade::size() const -> size_t

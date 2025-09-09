@@ -33,43 +33,40 @@ namespace orderbook
                 auto add_order(const core::Price &price, const core::Quantity &quantity, const core::Side &side,
                                const core::Timestamp &timestamp) -> std::pair<core::OrderId, std::vector<Trade>>;
 
-                auto modify_order(const core::OrderId &order_id, const core::Price &price,
-                                  const core::Quantity &quantity, const core::Timestamp &timestamp)
-                        -> std::pair<bool, std::vector<Trade>>;
+                auto modify_order(const core::OrderId &order_id, const core::Quantity &quantity, const core::Timestamp &timestamp) -> bool;
 
                 auto remove_order(const core::OrderId &order_id) -> bool;
 
                 auto snapshot() const -> Snapshot;
 
         private:
-                static auto buy_check(const core::Price level_price, const core::Price order_price) -> bool;
+                static auto buy_check(core::Price level_price, core::Price order_price) -> bool;
 
-                static auto sell_check(const core::Price level_price, const core::Price order_price) -> bool;
+                static auto sell_check(core::Price level_price, core::Price order_price) -> bool;
 
-                auto get_level(const std::shared_ptr<Order> &order) -> std::pair<std::shared_ptr<Level>, LevelRemoval>;
+                auto get_level(const Order &order) -> std::pair<Level *, LevelRemoval>;
 
                 auto add_order(const core::OrderId &order_id, const core::Price &price, const core::Quantity &quantity,
                                const core::Side &side, const core::Timestamp &timestamp) -> std::vector<Trade>;
 
                 template<typename Compare1, typename Compare2, typename PriceCheck>
-                auto match(const std::shared_ptr<Order> &order,
-                           std::map<core::Price, std::shared_ptr<Level>, Compare1> &levels,
-                           std::map<core::Price, std::shared_ptr<Level>, Compare2> &opposite_levels,
-                           PriceCheck price_check) -> std::vector<Trade>;
+                auto match(std::unique_ptr<Order> order,
+                           std::map<core::Price, std::unique_ptr<Level>, Compare1> &levels,
+                           std::map<core::Price, std::unique_ptr<Level>, Compare2> &opposite_levels,
+                           PriceCheck &price_check) -> std::vector<Trade>;
 
-                std::unordered_map<core::OrderId, std::shared_ptr<Order>> f_orders{};
-                std::map<core::Price, std::shared_ptr<Level>, std::greater<>> f_bids{};
-                std::map<core::Price, std::shared_ptr<Level>, std::less<>> f_asks{};
+                std::unordered_map<core::OrderId, Order *> f_orders{};
+                std::map<core::Price, std::unique_ptr<Level>, std::greater<>> f_bids{};
+                std::map<core::Price, std::unique_ptr<Level>, std::less<>> f_asks{};
 
                 SharedCounter<core::OrderId> f_order_counter = SharedCounter<core::OrderId>();
                 SharedCounter<core::TradeId> f_trade_counter = SharedCounter<core::TradeId>();
         };
 
         template<typename Compare1, typename Compare2, typename PriceCheck>
-        auto Book::match(const std::shared_ptr<Order> &order,
-                         std::map<core::Price, std::shared_ptr<Level>, Compare1> &levels,
-                         std::map<core::Price, std::shared_ptr<Level>, Compare2> &opposite_levels,
-                         PriceCheck price_check) -> std::vector<Trade>
+        auto Book::match(std::unique_ptr<Order> order, std::map<core::Price, std::unique_ptr<Level>, Compare1> &levels,
+                         std::map<core::Price, std::unique_ptr<Level>, Compare2> &opposite_levels,
+                         PriceCheck &price_check) -> std::vector<Trade>
         {
                 std::vector<Trade> trades{};
 
@@ -93,8 +90,8 @@ namespace orderbook
                         const auto [level_it, inserted] = levels.try_emplace(
                                 order->price(), std::make_unique<Level>(order->price(), f_trade_counter));
                         const auto &level = level_it->second;
-                        level->add_order(order);
-                        f_orders[order->id()] = order;
+                        f_orders[order->id()] = order.get();
+                        level->add_order(std::move(order));
                 }
 
                 return trades;

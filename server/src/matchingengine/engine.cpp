@@ -21,8 +21,8 @@ namespace orderbook
 
         int Engine::do_work()
         {
-                int work_done = 0;
-                for (int i = 0; i < BatchSize; i++) {
+                auto work_done = 0;
+                for (auto i = 0; i < BatchSize; i++) {
                         core::Payload inbound_payload{};
                         if (!f_inbound_buffer->pop(inbound_payload)) {
                                 return work_done;
@@ -130,25 +130,14 @@ namespace orderbook
 
                 auto &book = get_book(request.symbol());
 
-                auto [success, trades] =
-                        book.modify_order(request.order_id(), request.price(), request.quantity(), timestamp);
+                const auto success = book.modify_order(request.order_id(), request.quantity(), timestamp);
 
-                auto outbound_payload = serialize(
-                        payload.connectionId,
-                        core::protocol::trading::ModifyOrderResponse(request.symbol(), request.order_id(), success));
+                const auto outbound_payload =
+                        serialize(payload.connectionId,
+                                  core::protocol::trading::ModifyOrderResponse(request.symbol(), request.order_id(),
+                                                                               request.quantity(), success));
                 if (!f_outbound_buffer->push(*outbound_payload)) {
                         BOOST_LOG_TRIVIAL(warning) << "Outbound buffer is full, dropping message";
-                }
-
-                for (const auto &trade: trades) {
-                        outbound_payload =
-                                serialize(payload.connectionId,
-                                          core::protocol::trading::Trade(request.symbol(), trade.id(), trade.price(),
-                                                                         trade.quantity(), trade.timestamp(),
-                                                                         trade.source_order(), trade.matched_order()));
-                        if (!f_outbound_buffer->push(*outbound_payload)) {
-                                BOOST_LOG_TRIVIAL(warning) << "Outbound buffer is full, dropping message";
-                        }
                 }
         }
 

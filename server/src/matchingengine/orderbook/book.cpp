@@ -8,37 +8,33 @@ namespace orderbook
                              const core::Timestamp &timestamp) -> std::pair<core::OrderId, std::vector<Trade>>
         {
                 const auto order_id = ++f_order_counter;
-                const auto order = std::make_shared<Order>(order_id, price, quantity, side, timestamp);
-                auto trades = order->side() == core::Side::Buy ? match(order, f_bids, f_asks, buy_check)
-                                                               : match(order, f_asks, f_bids, sell_check);
+                auto order = std::make_unique<Order>(order_id, price, quantity, side, timestamp);
+
+                auto trades = order->side() == core::Side::Buy ? match(std::move(order), f_bids, f_asks, buy_check)
+                                                               : match(std::move(order), f_asks, f_bids, sell_check);
+
                 return std::make_pair(order_id, std::move(trades));
         }
 
-        auto Book::add_order(const core::OrderId &order_id, const core::Price &price, const core::Quantity &quantity,
-                             const core::Side &side, const core::Timestamp &timestamp) -> std::vector<Trade>
-        {
-                const auto order = std::make_shared<Order>(order_id, price, quantity, side, timestamp);
-                return order->side() == core::Side::Buy ? match(order, f_bids, f_asks, buy_check)
-                                                        : match(order, f_asks, f_bids, sell_check);
-        }
-
-        auto Book::modify_order(const core::OrderId &order_id, const core::Price &price, const core::Quantity &quantity,
-                                const core::Timestamp &timestamp) -> std::pair<bool, std::vector<Trade>>
+        auto Book::modify_order(const core::OrderId &order_id, const core::Quantity &quantity,
+                                const core::Timestamp &timestamp) -> bool
         {
                 const auto it = f_orders.find(order_id);
                 if (it == f_orders.end()) {
-                        return {false, {}};
+                        return false;
                 }
-                if (const auto &order = it->second; order->price() != price) {
+
+                if (quantity == 0) {
                         remove_order(order_id);
-                        auto trades = add_order(order_id, price, quantity, order->side(), timestamp);
-                        return std::make_pair(true, std::move(trades));
-                } else {
-                        const auto [level, cleanup_function] = get_level(order);
-                        level->set_quantity(level->quantity() - order->quantity() + quantity);
-                        order->set_quantity(quantity);
-                        return {true, {}};
+                        return true;
                 }
+
+                const auto order = it->second;
+                const auto [level, cleanup_function] = get_level(*order);
+                level->remove_quantity(order->quantity());
+                level->add_quantity(quantity);
+                order->set_quantity(quantity, timestamp);
+                return true;
         }
 
         auto Book::remove_order(const core::OrderId &order_id) -> bool
@@ -47,38 +43,17 @@ namespace orderbook
                 if (it == f_orders.end()) {
                         return false;
                 }
-                f_orders.erase(it);
+
                 const auto order = it->second;
-                const auto [level, cleanup] = get_level(order);
-                level->remove_order(order);
+                f_orders.erase(it);
+
+                const auto [level, cleanup] = get_level(*order);
+                level->remove_order(order->id());
                 if (level->empty()) {
                         cleanup();
                 }
+
                 return true;
-        }
-
-        auto Book::get_level(const std::shared_ptr<Order> &order) -> std::pair<std::shared_ptr<Level>, LevelRemoval>
-        {
-                std::shared_ptr<Level> level;
-                LevelRemoval removal;
-
-                if (order->side() == core::Side::Buy) {
-                        const auto it = f_bids.find(order->price());
-                        if (it == f_bids.end()) {
-                                return {nullptr, [] {}};
-                        }
-                        level = it->second;
-                        removal = [this, it]() -> void { this->f_bids.erase(it); };
-                } else {
-                        const auto it = f_asks.find(order->price());
-                        if (it == f_asks.end()) {
-                                return {nullptr, [] {}};
-                        }
-                        level = it->second;
-                        removal = [this, it]() -> void { this->f_asks.erase(it); };
-                }
-
-                return {level, removal};
         }
 
         auto Book::snapshot() const -> Snapshot
@@ -106,5 +81,30 @@ namespace orderbook
         auto Book::sell_check(const core::Price level_price, const core::Price order_price) -> bool
         {
                 return level_price >= order_price;
+        }
+
+        auto Book::get_level(const Order &order) -> std::pair<Level *, LevelRemoval>
+        {
+                if (order.side() == core::Side::Buy) {
+                        auto it = f_bids.find(order.price());
+                        if (it == f_bids.end()) {
+                                return {nullptr, [] {}};
+                        }
+                        return {it->second.get(), [this, it] { f_bids.erase(it); }};
+                }
+
+                auto it = f_asks.find(order.price());
+                if (it == f_asks.end()) {
+                        return {nullptr, [] {}};
+                }
+                return {it->second.get(), [this, it] { f_asks.erase(it); }};
+        }
+
+        auto Book::add_order(const core::OrderId &order_id, const core::Price &price, const core::Quantity &quantity,
+                             const core::Side &side, const core::Timestamp &timestamp) -> std::vector<Trade>
+        {
+                auto order = std::make_unique<Order>(order_id, price, quantity, side, timestamp);
+                return order->side() == core::Side::Buy ? match(std::move(order), f_bids, f_asks, buy_check)
+                                                        : match(std::move(order), f_asks, f_bids, sell_check);
         }
 } // namespace orderbook

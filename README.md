@@ -15,7 +15,7 @@ This project builds a reusable library and provides both a server (`matching_eng
 - **Core library (`matching_engine_core`)**
     - Protocol serialization/deserialization
     - TCP client/server components
-  **Server library (`matching_engine_lib`)**
+- **Server library (`matching_engine_lib`)**
     - Builds on top of `matching_engine_core`
     - Implements the engine and order book logic
 - **Executables**

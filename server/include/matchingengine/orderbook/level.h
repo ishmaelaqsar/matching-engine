@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/log/trivial.hpp>
+#include <deque>
 #include <vector>
 
 #include <matchingengine/orderbook/order.h>
@@ -16,7 +17,7 @@ namespace orderbook
                 using OrderCallback = std::function<void(const core::OrderId &)>;
 
                 Level(const Level &level) = delete;
-                Level(Level &&level) = default;
+                Level(Level &&level) noexcept = default;
                 ~Level() = default;
                 Level &operator=(const Level &level) = delete;
                 Level &operator=(Level &&level) = default;
@@ -27,21 +28,26 @@ namespace orderbook
 
                 [[nodiscard]] auto empty() const -> bool;
 
+                [[nodiscard]] auto price() const -> core::Price;
+
                 [[nodiscard]] auto quantity() const -> core::Quantity;
 
-                auto set_quantity(core::Quantity quantity) -> void;
+                auto add_quantity(core::Quantity quantity) -> void;
 
-                auto add_order(const std::shared_ptr<Order> &order) -> void;
+                auto remove_quantity(core::Quantity quantity) -> void;
 
-                auto remove_order(const std::shared_ptr<Order> &order) -> void;
+                auto add_order(std::unique_ptr<Order> order) -> void;
 
-                auto match_order(const std::shared_ptr<Order> &order, const OrderCallback &order_fill_callback)
-                        -> std::vector<Trade>;
+                auto remove_order(const core::OrderId &id) -> void;
+
+                auto match_order(const std::unique_ptr<Order> &incoming, const OrderCallback &on_fill) -> std::vector<Trade>;
 
         private:
                 core::Price f_price;
                 SharedCounter<core::TradeId> f_id_counter;
                 core::Quantity f_quantity = 0;
-                std::vector<std::shared_ptr<Order>> f_orders;
+
+                std::deque<std::unique_ptr<Order>> f_orders;
         };
+
 } // namespace orderbook

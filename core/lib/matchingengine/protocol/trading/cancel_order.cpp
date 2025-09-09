@@ -29,6 +29,11 @@ namespace core::protocol::trading
                 f_order_id = deserialize_uint64(src, &offset);
         }
 
+        auto CancelOrderRequest::print(std::ostream &os) const -> void
+        {
+                os << to_string();
+        }
+
         auto CancelOrderRequest::to_string() const -> std::string
         {
                 std::ostringstream os;
@@ -37,11 +42,6 @@ namespace core::protocol::trading
                 os << "order_id: " << f_order_id;
                 os << "}";
                 return os.str();
-        }
-
-        auto CancelOrderRequest::print(std::ostream &os) const -> void
-        {
-                os << to_string();
         }
 
         auto CancelOrderRequest::size() const -> size_t
@@ -84,6 +84,11 @@ namespace core::protocol::trading
                 f_success = static_cast<bool>(deserialize_uint8(src, &offset));
         }
 
+        auto CancelOrderResponse::print(std::ostream &os) const -> void
+        {
+                os << to_string();
+        }
+
         auto CancelOrderResponse::to_string() const -> std::string
         {
                 std::ostringstream os;
@@ -93,11 +98,6 @@ namespace core::protocol::trading
                 os << "success: " << f_success;
                 os << "}";
                 return os.str();
-        }
-
-        auto CancelOrderResponse::print(std::ostream &os) const -> void
-        {
-                os << to_string();
         }
 
         auto CancelOrderResponse::size() const -> size_t

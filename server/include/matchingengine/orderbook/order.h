@@ -9,9 +9,9 @@ namespace orderbook
         class Order
         {
         public:
-                Order(const Order &order) = default;
+                Order(const Order &order) = delete;
                 Order(Order &&order) = default;
-                Order &operator=(const Order &order) = default;
+                Order &operator=(const Order &order) = delete;
                 Order &operator=(Order &&order) = default;
                 ~Order() = default;
 
@@ -24,9 +24,11 @@ namespace orderbook
 
                 friend auto operator<<(std::ostream &os, const Order &order) -> std::ostream &;
 
-                auto set_price(core::Price price) -> void;
+                auto set_quantity(core::Quantity quantity, core::Timestamp timestamp) -> void;
 
-                auto set_quantity(core::Quantity quantity) -> void;
+                auto add_quantity(core::Quantity quantity) -> void;
+
+                auto remove_quantity(core::Quantity quantity) -> void;
 
                 [[nodiscard]] auto id() const -> core::OrderId;
 

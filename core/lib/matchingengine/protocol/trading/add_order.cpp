@@ -33,6 +33,11 @@ namespace core::protocol::trading
                 f_side = static_cast<Side>(deserialize_uint8(src, &offset));
         }
 
+        auto AddOrderRequest::print(std::ostream &os) const -> void
+        {
+                os << to_string();
+        }
+
         auto AddOrderRequest::to_string() const -> std::string
         {
                 std::ostringstream os;
@@ -43,11 +48,6 @@ namespace core::protocol::trading
                 os << "side: " << f_side;
                 os << "}";
                 return os.str();
-        }
-
-        auto AddOrderRequest::print(std::ostream &os) const -> void
-        {
-                os << to_string();
         }
 
         auto AddOrderRequest::size() const -> size_t
@@ -112,6 +112,11 @@ namespace core::protocol::trading
                 f_timestamp = deserialize_uint64(src, &offset);
         }
 
+        auto AddOrderResponse::print(std::ostream &os) const -> void
+        {
+                os << to_string();
+        }
+
         auto AddOrderResponse::to_string() const -> std::string
         {
                 std::ostringstream os;
@@ -124,11 +129,6 @@ namespace core::protocol::trading
                 os << "timestamp: " << f_timestamp;
                 os << "}";
                 return os.str();
-        }
-
-        auto AddOrderResponse::print(std::ostream &os) const -> void
-        {
-                os << to_string();
         }
 
         auto AddOrderResponse::size() const -> size_t

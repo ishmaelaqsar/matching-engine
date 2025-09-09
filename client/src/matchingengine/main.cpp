@@ -38,9 +38,9 @@ auto parse_args(const int argc, char **argv) -> std::unordered_map<std::string, 
 }
 
 template<typename SubMessage>
-static auto response_handler(std::unique_ptr<core::protocol::Message<SubMessage>> message) -> void
+static auto response_handler(const SubMessage &message) -> void
 {
-        BOOST_LOG_TRIVIAL(info) << "Received response: " << *message;
+        BOOST_LOG_TRIVIAL(info) << "Received response: " << message;
 }
 
 int main(const int argc, char **argv)
@@ -55,7 +55,7 @@ int main(const int argc, char **argv)
                 return 1;
         }
 
-        const unsigned short port = static_cast<unsigned short>(port_ul);
+        const auto port = static_cast<unsigned short>(port_ul);
 
         boost::asio::io_context io_context;
 

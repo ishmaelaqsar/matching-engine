@@ -41,6 +41,11 @@ namespace core::protocol::view
                 f_symbol = deserialize_string(src, &offset);
         }
 
+        auto GetBookRequest::print(std::ostream &os) const -> void
+        {
+                os << to_string();
+        }
+
         auto GetBookRequest::to_string() const -> std::string
         {
                 std::ostringstream os;
@@ -48,11 +53,6 @@ namespace core::protocol::view
                 os << "symbol: " << f_symbol;
                 os << "}";
                 return os.str();
-        }
-
-        auto GetBookRequest::print(std::ostream &os) const -> void
-        {
-                os << to_string();
         }
 
         auto GetBookRequest::size() const -> size_t
@@ -129,6 +129,11 @@ namespace core::protocol::view
                         f_asks[i] = deserialize_simple_struct<Level>(src, &offset);
                 }
         }
+        auto GetBookResponse::print(std::ostream &os) const -> void
+        {
+                os << to_string();
+        }
+
         auto GetBookResponse::to_string() const -> std::string
         {
                 std::ostringstream os;
@@ -144,11 +149,6 @@ namespace core::protocol::view
                 }
                 os << "]}";
                 return os.str();
-        }
-
-        auto GetBookResponse::print(std::ostream &os) const -> void
-        {
-                os << to_string();
         }
 
         auto GetBookResponse::size() const -> size_t

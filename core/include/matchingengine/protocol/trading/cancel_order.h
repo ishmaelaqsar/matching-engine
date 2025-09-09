@@ -23,9 +23,9 @@ namespace core::protocol::trading
 
                 auto deserialize(const unsigned char *src) -> void;
 
-                auto to_string() const -> std::string;
-
                 auto print(std::ostream &os) const -> void;
+
+                [[nodiscard]] auto to_string() const -> std::string;
 
                 [[nodiscard]] auto size() const -> size_t;
 
@@ -56,9 +56,9 @@ namespace core::protocol::trading
 
                 auto deserialize(const unsigned char *src) -> void;
 
-                auto to_string() const -> std::string;
-
                 auto print(std::ostream &os) const -> void;
+
+                [[nodiscard]] auto to_string() const -> std::string;
 
                 [[nodiscard]] auto size() const -> size_t;
 

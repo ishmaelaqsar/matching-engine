@@ -35,14 +35,14 @@ namespace core::protocol
                         static_cast<SubMessage *>(this)->deserialize(src);
                 }
 
-                auto to_string() const -> std::string
-                {
-                        return static_cast<const SubMessage *>(this)->to_string();
-                }
-
                 auto print(std::ostream &os) const -> void
                 {
                         static_cast<const SubMessage *>(this)->print(os);
+                }
+
+                [[nodiscard]] auto to_string() const -> std::string
+                {
+                        return static_cast<const SubMessage *>(this)->to_string();
                 }
 
                 [[nodiscard]] auto size() const -> size_t

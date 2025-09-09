@@ -16,6 +16,7 @@
 
 #include <matchingengine/protocol/trading/add_order.h>
 #include <matchingengine/protocol/trading/cancel_order.h>
+#include <matchingengine/protocol/trading/modify_order.h>
 #include <matchingengine/protocol/trading/trade.h>
 #include <matchingengine/protocol/view/get_book.h>
 #include <matchingengine/tcp/client.h>
@@ -44,6 +45,7 @@ struct SymbolTabWidgets
         QSpinBox *qtySpinBox;
         QPushButton *buyButton;
         QPushButton *sellButton;
+        QPushButton *modifyButton;
         QPushButton *cancelButton;
 };
 
@@ -57,7 +59,7 @@ public:
 
         static QString formatTimestampMs(const core::Timestamp timestamp)
         {
-                const QDateTime dt = QDateTime::fromMSecsSinceEpoch(timestamp, Qt::UTC);
+                const auto dt = QDateTime::fromMSecsSinceEpoch(timestamp, Qt::UTC);
                 return dt.toString("dd/MM/yyyy hh:mm:ss.zzz");
         }
 
@@ -67,7 +69,7 @@ public:
         {
                 static_assert(std::is_integral_v<T>, "qstr only supports integral types");
 
-                const QLocale locale = QLocale::c();
+                const auto locale = QLocale::c();
                 if constexpr (std::is_unsigned_v<T>) {
                         return locale.toString(static_cast<qulonglong>(value));
                 } else {
@@ -85,11 +87,13 @@ private slots:
         void onTabChanged(int index);
         void onBuyClicked();
         void onSellClicked();
+        void onModifyOrderClicked();
         void onCancelOrderClicked();
 
         // --- Data Handler Slots (called from network thread) ---
         void handleGetBookResponse(const core::protocol::view::GetBookResponse &msg);
         void handleAddOrderResponse(const core::protocol::trading::AddOrderResponse &msg) const;
+        void handleModifyOrderResponse(const core::protocol::trading::ModifyOrderResponse &msg);
         void handleCancelOrderResponse(const core::protocol::trading::CancelOrderResponse &msg);
         void handleTrade(const core::protocol::trading::Trade &msg) const;
         void updateOrderStatusFromTrade(core::OrderId orderId, core::Quantity tradeQuantity) const;
@@ -134,5 +138,6 @@ private:
         void removeOrderFromTable(core::OrderId orderId) const;
         void addTradeToTable(core::TradeId tradeId, core::Price price, core::Quantity quantity,
                              core::OrderId sourceOrder, core::OrderId matchedOrder, core::Timestamp timestamp) const;
-        void sendAddOrderRequest(core::Side side);
+        void sendAddOrderRequest(core::Price price, core::Quantity quantity, core::Side side);
+        void sendCancelRequest(core::OrderId orderId) const;
 };

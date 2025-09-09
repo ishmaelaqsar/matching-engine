@@ -30,14 +30,20 @@ namespace orderbook
                 return os;
         }
 
-        auto Order::set_price(const core::Price price) -> void
+        auto Order::set_quantity(const core::Quantity quantity, const core::Timestamp timestamp) -> void
         {
-                this->f_price = price;
+                f_quantity = quantity;
+                f_timestamp = timestamp;
         }
 
-        auto Order::set_quantity(const core::Quantity quantity) -> void
+        auto Order::add_quantity(const core::Quantity quantity) -> void
         {
-                this->f_quantity = quantity;
+                f_quantity += quantity;
+        }
+
+        auto Order::remove_quantity(const core::Quantity quantity) -> void
+        {
+                f_quantity -= quantity;
         }
 
         auto Order::id() const -> core::OrderId

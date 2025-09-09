@@ -15,7 +15,7 @@ namespace core::protocol::trading
                 ModifyOrderRequest &operator=(ModifyOrderRequest &&request) = default;
                 ~ModifyOrderRequest() = default;
 
-                ModifyOrderRequest(Symbol symbol, OrderId order_id, Price price, Quantity quantity);
+                ModifyOrderRequest(Symbol symbol, OrderId order_id, Quantity quantity);
 
                 static auto type() -> MessageType;
 
@@ -23,9 +23,9 @@ namespace core::protocol::trading
 
                 auto deserialize(const unsigned char *src) -> void;
 
-                auto to_string() const -> std::string;
-
                 auto print(std::ostream &os) const -> void;
+
+                [[nodiscard]] auto to_string() const -> std::string;
 
                 [[nodiscard]] auto size() const -> size_t;
 
@@ -33,14 +33,11 @@ namespace core::protocol::trading
 
                 [[nodiscard]] auto order_id() const -> OrderId;
 
-                [[nodiscard]] auto price() const -> Price;
-
                 [[nodiscard]] auto quantity() const -> Quantity;
 
         private:
                 Symbol f_symbol{};
                 OrderId f_order_id{};
-                Price f_price{};
                 Quantity f_quantity{};
         };
 
@@ -54,7 +51,7 @@ namespace core::protocol::trading
                 ModifyOrderResponse &operator=(ModifyOrderResponse &&response) = default;
                 ~ModifyOrderResponse() = default;
 
-                ModifyOrderResponse(Symbol symbol, OrderId order_id, bool success);
+                ModifyOrderResponse(Symbol symbol, OrderId order_id, Quantity quantity, bool success);
 
                 static auto type() -> MessageType;
 
@@ -62,9 +59,9 @@ namespace core::protocol::trading
 
                 auto deserialize(const unsigned char *src) -> void;
 
-                auto to_string() const -> std::string;
-
                 auto print(std::ostream &os) const -> void;
+
+                [[nodiscard]] auto to_string() const -> std::string;
 
                 [[nodiscard]] auto size() const -> size_t;
 
@@ -72,11 +69,14 @@ namespace core::protocol::trading
 
                 [[nodiscard]] auto order_id() const -> OrderId;
 
+                [[nodiscard]] auto quantity() const -> Quantity;
+
                 [[nodiscard]] auto success() const -> bool;
 
         private:
                 Symbol f_symbol{};
                 OrderId f_order_id{};
+                Quantity f_quantity{};
                 bool f_success{};
         };
 } // namespace core::protocol::trading
