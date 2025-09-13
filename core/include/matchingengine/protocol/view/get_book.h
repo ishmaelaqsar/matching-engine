@@ -8,9 +8,8 @@
 
 namespace core::protocol::view
 {
-        class Level
+        struct Level
         {
-        public:
                 Level() = default;
 
                 Level(const Price &price, const Quantity &quantity);
@@ -19,8 +18,8 @@ namespace core::protocol::view
 
                 auto operator<<(std::ostream &os) const -> std::ostream &;
 
-                Price price;
-                Quantity quantity;
+                Price price{};
+                Quantity quantity{};
         };
 
         class GetBookRequest final : public Message<GetBookRequest>

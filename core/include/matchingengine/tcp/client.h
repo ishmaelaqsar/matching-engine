@@ -19,7 +19,7 @@ namespace tcp
 
                 ~Client();
 
-                void connect();
+                void connect(std::string username);
 
                 void disconnect();
 

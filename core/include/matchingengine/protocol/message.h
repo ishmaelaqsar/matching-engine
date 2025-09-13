@@ -7,16 +7,24 @@ namespace core::protocol
 {
         enum class MessageType : uint8_t
         {
-                Unknown = 0,
-                Trade = 1,
-                AddOrderRequest = 2,
-                AddOrderResponse = 3,
-                ModifyOrderRequest = 4,
-                ModifyOrderResponse = 5,
-                CancelOrderRequest = 6,
-                CancelOrderResponse = 7,
-                GetBookRequest = 8,
-                GetBookResponse = 9,
+                Unknown,
+                LoginRequest,
+                LoginResponse,
+                LogoutRequest,
+                LogoutResponse,
+                Info,
+                Error,
+                Trade,
+                AddOrderRequest,
+                AddOrderResponse,
+                ModifyOrderRequest,
+                ModifyOrderResponse,
+                CancelOrderRequest,
+                CancelOrderResponse,
+                GetBookRequest,
+                GetBookResponse,
+                GetOrdersRequest,
+                GetOrdersResponse,
         };
 
         auto operator<<(std::ostream &os, const MessageType &type) -> std::ostream &;

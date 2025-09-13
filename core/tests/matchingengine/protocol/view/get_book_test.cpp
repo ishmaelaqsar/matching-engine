@@ -39,7 +39,7 @@ TEST(SerDeTest, GetBookResponse)
 
         ASSERT_EQ(response.symbol(), expected_symbol);
 
-        assert_iterable<Level>(expected_bids, response.bids(), [](const Level l1, const Level l2) -> void {
+        assert_iterable(expected_bids, response.bids(), [](const Level l1, const Level l2) -> void {
                 ASSERT_EQ(l1.price, l2.price);
                 ASSERT_EQ(l1.quantity, l2.quantity);
         });

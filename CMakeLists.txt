@@ -12,8 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # -------------------------------------------------------------
 # Project-wide definitions
-set(RINGBUFFER_CAPACITY 4096 CACHE STRING "Ring buffer capacity")
-set(MAX_PAYLOAD_SIZE 256 CACHE STRING "Ring buffer max payload size")
+set(RINGBUFFER_CAPACITY 4096 CACHE STRING "Capacity of the Ring Buffer between the server and matching engine")
+set(MAX_PAYLOAD_SIZE 256 CACHE STRING "Max payload size of the Ring Buffer between the server and matching engine")
 
 # -------------------------------------------------------------
 # Build type configuration
@@ -32,9 +32,9 @@ enable_testing()
 # Compiler warnings
 if (MSVC)
     add_compile_options(/W4 /permissive-)
-else()
+else ()
     add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
-endif()
+endif ()
 
 # -------------------------------------------------------------
 # Dependencies

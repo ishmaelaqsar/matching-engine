@@ -11,15 +11,14 @@ namespace orderbook
         class Engine
         {
         public:
-                Engine(const std::shared_ptr<core::RingBuffer<core::Payload>> &inbound_buffer,
-                       const std::shared_ptr<core::RingBuffer<core::Payload>> &outbound_buffer);
+                Engine(const core::RingBuffer<core::Payload> &inbound_buffer,
+                       const core::RingBuffer<core::Payload> &outbound_buffer);
 
                 auto do_work() -> int;
 
         private:
                 template<typename Message>
-                static auto serialize(core::ConnectionId connectionId, Message &&response)
-                        -> std::unique_ptr<core::Payload>;
+                static auto serialize(core::ConnectionId connectionId, Message &&response) -> core::Payload;
 
                 template<typename SubMessage>
                 static auto deserialize(const core::Payload &payload) -> SubMessage;
@@ -32,18 +31,18 @@ namespace orderbook
                 auto handle_cancel_order_request(const core::Payload &payload) -> void;
 
                 std::unordered_map<core::Symbol, std::unique_ptr<Book>> f_order_books{};
-                const std::shared_ptr<core::RingBuffer<core::Payload>> &f_inbound_buffer;
-                const std::shared_ptr<core::RingBuffer<core::Payload>> &f_outbound_buffer;
+                std::unordered_map<core::Symbol, std::vector<std::unique_ptr<Order>>> f_orders_by_user{};
+                const core::RingBuffer<core::Payload> &f_inbound_buffer;
+                const core::RingBuffer<core::Payload> &f_outbound_buffer;
         };
 
         template<typename Message>
-        auto Engine::serialize(const core::ConnectionId connectionId, Message &&response)
-                -> std::unique_ptr<core::Payload>
+        auto Engine::serialize(const core::ConnectionId connectionId, Message &&response) -> core::Payload
         {
-                auto payload = std::make_unique<core::Payload>();
-                payload->connectionId = connectionId;
-                payload->header = {response.type(), response.size()};
-                response.serialize(payload->data.data());
+                auto payload = core::Payload{};
+                payload.connection_id = connectionId;
+                payload.header = {response.type(), response.size()};
+                response.serialize(payload.data.data());
                 return payload;
         }
 

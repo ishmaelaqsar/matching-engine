@@ -18,7 +18,7 @@ namespace core
 
         struct Payload
         {
-                ConnectionId connectionId;
+                ConnectionId connection_id;
                 protocol::Header header;
                 Data data;
         };

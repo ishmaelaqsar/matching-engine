@@ -38,10 +38,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(std::make_uniq
         btcWidgets.modifyButton = ui->modifyOrderButton;
         btcWidgets.cancelButton = ui->cancelOrderButton;
 
-        connect(btcWidgets.modifyButton, &QPushButton::clicked, this, &MainWindow::onModifyOrderClicked);
-
-        connect(btcWidgets.cancelButton, &QPushButton::clicked, this, &MainWindow::onCancelOrderClicked);
-
         m_symbolTabs[m_currentSymbol] = btcWidgets;
 }
 
@@ -75,6 +71,9 @@ void MainWindow::setupConnections()
 
         connect(ui->buyButton, &QPushButton::clicked, this, &MainWindow::onBuyClicked);
         connect(ui->sellButton, &QPushButton::clicked, this, &MainWindow::onSellClicked);
+
+        connect(ui->modifyOrderButton, &QPushButton::clicked, this, &MainWindow::onModifyOrderClicked);
+        connect(ui->cancelOrderButton, &QPushButton::clicked, this, &MainWindow::onCancelOrderClicked);
 }
 
 // ===================== CREATE TAB =====================
@@ -302,6 +301,10 @@ void MainWindow::onActionConnectTriggered()
         }
         auto host = parts[0].toStdString();
         auto port = parts[1].toUShort();
+
+        const auto username = QInputDialog::getText(this, "Connect to Server", "Enter username", QLineEdit::Normal,
+                                                  "", &ok);
+        if (!ok || username == "") return;
 
         m_ioContext = std::make_unique<boost::asio::io_context>();
         m_workGuard = std::make_unique<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>>(

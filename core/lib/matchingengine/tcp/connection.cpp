@@ -5,15 +5,21 @@
 #include <boost/asio/write.hpp>
 #include <boost/log/trivial.hpp>
 
+#include <matchingengine/protocol/serialize_helper.h>
+
 namespace tcp
 {
         Connection::Connection(const core::ConnectionId id, boost::asio::io_context &io_context,
                                boost::asio::ip::tcp::socket socket,
-                               const std::function<void(core::Payload)> &request_enqueue,
-                               const std::function<void(core::ConnectionId)> &connection_fail) :
+                               std::function<bool(const std::string &)> username_check,
+                               std::function<void(core::Payload)> request_enqueue,
+                               std::function<void(core::ConnectionId, InfoMessages)> on_info,
+                               std::function<void(core::ConnectionId)> on_fail) :
             f_id(id),
-            f_request_enqueue(request_enqueue),
-            f_connection_fail(connection_fail),
+            f_username_check(std::move(username_check)),
+            f_request_enqueue(std::move(request_enqueue)),
+            f_on_info(std::move(on_info)),
+            f_on_fail(std::move(on_fail)),
             f_socket(std::move(socket)),
             f_io_context(io_context)
         {}
@@ -23,16 +29,61 @@ namespace tcp
                 return f_id;
         }
 
+        std::string_view Connection::username() const
+        {
+                return f_username;
+        }
+
         void Connection::start()
         {
-                boost::asio::async_read(f_socket, boost::asio::buffer(f_header_buffer),
-                                        [self = shared_from_this()](const boost::system::error_code ec,
-                                                                    const size_t) -> void { self->handle_read(ec); });
+                boost::asio::async_read(
+                        f_socket, boost::asio::buffer(f_username_buffer),
+                        [self = shared_from_this()](const boost::system::error_code &ec, const size_t) -> void {
+                                if (ec) {
+                                        BOOST_LOG_TRIVIAL(error) << "Read username error: " << ec.message();
+                                        self->f_on_info(self->f_id, core::protocol::info::Error::client_error());
+                                        self->f_on_fail(self->f_id);
+                                        return;
+                                }
+
+                                size_t offset = 0;
+                                self->f_username =
+                                        core::protocol::deserialize_string(self->f_username_buffer.data(), &offset);
+
+                                if (self->f_username.empty()) {
+                                        BOOST_LOG_TRIVIAL(error) << "Invalid username received";
+                                        self->f_on_info(self->f_id,
+                                                        core::protocol::info::Error::client_error("Invalid Username"));
+                                        self->f_on_fail(self->f_id);
+                                        return;
+                                }
+
+                                if (!self->f_username_check(self->f_username)) {
+                                        BOOST_LOG_TRIVIAL(error) << "Username already logged in: " << self->f_username;
+                                        self->f_on_info(self->f_id, core::protocol::info::Error::client_error(
+                                                                            "Username already logged in"));
+                                        self->f_on_fail(self->f_id);
+                                        return;
+                                }
+
+                                BOOST_LOG_TRIVIAL(info)
+                                        << "Connection ID=" << self->f_id << " connected as user: " << self->f_username;
+
+                                self->f_on_info(self->f_id,
+                                                core::protocol::info::Info("Logged in as " + self->f_username));
+
+                                self->read_header();
+                        });
+        }
+
+        void Connection::stop()
+        {
+                f_stopped.store(true);
         }
 
         void Connection::write(const core::protocol::Header &header, const core::Data &data)
         {
-                const size_t total_size = core::protocol::Header::Size + header.length;
+                const auto total_size = core::protocol::Header::Size + header.length;
                 const auto buffer = std::make_shared<std::vector<unsigned char>>(total_size);
 
                 core::protocol::Header::serialize(header, buffer->data());
@@ -55,14 +106,23 @@ namespace tcp
                 }
         }
 
-        void Connection::handle_read(const boost::system::error_code &error_code)
+        void Connection::read_header()
         {
-                if (error_code) {
-                        BOOST_LOG_TRIVIAL(error) << "Read error: " << error_code.message();
-                        return;
-                }
+                boost::asio::async_read(
+                        f_socket, boost::asio::buffer(f_header_buffer),
+                        [self = shared_from_this()](const boost::system::error_code &ec, const size_t) -> void {
+                                if (ec) {
+                                        BOOST_LOG_TRIVIAL(error) << "Read error: " << ec.message();
+                                        self->f_on_fail(self->f_id);
+                                        return;
+                                }
+                                const auto header = core::protocol::Header::deserialize(self->f_header_buffer.data());
+                                self->read_payload(header);
+                        });
+        }
 
-                const auto header = core::protocol::Header::deserialize(f_header_buffer.data());
+        void Connection::read_payload(core::protocol::Header header)
+        {
                 f_payload_buffer.resize(header.length);
 
                 boost::asio::async_read(
@@ -70,7 +130,7 @@ namespace tcp
                         [self = shared_from_this(), header](const boost::system::error_code &ec, const size_t) -> void {
                                 if (ec) {
                                         BOOST_LOG_TRIVIAL(error) << "Read error: " << ec.message();
-                                        self->f_connection_fail(self->f_id);
+                                        self->f_on_fail(self->f_id);
                                         return;
                                 }
                                 auto data = core::Data{};
@@ -81,7 +141,11 @@ namespace tcp
                                         const auto payload = core::Payload{self->f_id, header, data};
                                         self->f_request_enqueue(payload);
                                 }
-                                self->start();
+
+                                if (!self->f_stopped.load()) {
+                                        // read the next message
+                                        self->read_header();
+                                }
                         });
         }
 } // namespace tcp

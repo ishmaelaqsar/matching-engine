@@ -17,7 +17,7 @@ namespace tcp
                 disconnect();
         }
 
-        void Client::connect()
+        void Client::connect(std::string username)
         {
                 BOOST_LOG_TRIVIAL(info) << "Connecting to server at " << f_endpoint;
                 f_socket.async_connect(f_endpoint, [self = shared_from_this()](const boost::system::error_code &ec) {

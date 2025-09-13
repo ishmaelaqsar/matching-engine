@@ -7,6 +7,8 @@ namespace core::protocol
         auto operator<<(std::ostream &os, const MessageType &type) -> std::ostream &
         {
                 switch (type) {
+                        case MessageType::Info: return os << "Info";
+                        case MessageType::Error: return os << "Error";
                         case MessageType::Trade: return os << "Trade";
                         case MessageType::AddOrderRequest: return os << "AddOrderRequest";
                         case MessageType::AddOrderResponse: return os << "AddOrderResponse";

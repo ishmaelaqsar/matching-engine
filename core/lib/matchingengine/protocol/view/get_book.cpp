@@ -140,11 +140,11 @@ namespace core::protocol::view
                 os << "GetBookResponse{";
                 os << "symbol: " << f_symbol << ", ";
                 os << "bids: [";
-                for (const auto bid: f_bids) {
+                for (const auto &bid: f_bids) {
                         bid.operator<<(os) << ", ";
                 }
                 os << "], asks: [";
-                for (const auto ask: f_asks) {
+                for (const auto &ask: f_asks) {
                         ask.operator<<(os) << ", ";
                 }
                 os << "]}";

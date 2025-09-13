@@ -4,7 +4,11 @@ set(CORE_HEADERS
         include/matchingengine/protocol/header.h
         include/matchingengine/protocol/serialize_helper.h
         include/matchingengine/protocol/message.h
+        include/matchingengine/protocol/admin/login.h
+        include/matchingengine/protocol/info/info.h
+        include/matchingengine/protocol/info/error.h
         include/matchingengine/protocol/view/get_book.h
+        include/matchingengine/protocol/view/get_orders.h
         include/matchingengine/protocol/trading/add_order.h
         include/matchingengine/protocol/trading/modify_order.h
         include/matchingengine/protocol/trading/trade.h
@@ -12,14 +16,19 @@ set(CORE_HEADERS
         include/matchingengine/tcp/client.h
         include/matchingengine/tcp/connection.h
         include/matchingengine/tcp/server.h
+        include/matchingengine/tcp/util.h
 )
 
 set(CORE_SOURCES
         lib/matchingengine/protocol/message.cpp
+        lib/matchingengine/protocol/admin/login.cpp
+        lib/matchingengine/protocol/info/info.cpp
+        lib/matchingengine/protocol/info/error.cpp
         lib/matchingengine/protocol/trading/add_order.cpp
         lib/matchingengine/protocol/trading/modify_order.cpp
         lib/matchingengine/protocol/trading/trade.cpp
         lib/matchingengine/protocol/view/get_book.cpp
+        lib/matchingengine/protocol/view/get_orders.cpp
         lib/matchingengine/protocol/header.cpp
         lib/matchingengine/protocol/trading/cancel_order.cpp
         lib/matchingengine/tcp/client.cpp
@@ -44,6 +53,7 @@ target_compile_definitions(matching_engine_core
         BOOST_LOG_DYN_LINK
         RINGBUFFER_CAPACITY=${RINGBUFFER_CAPACITY}
         MAX_PAYLOAD_SIZE=${MAX_PAYLOAD_SIZE}
+        CONNECTION_QUEUE_CAPACITY=${CONNECTION_QUEUE_CAPACITY}
 )
 
 # -------------------------------------------------------------

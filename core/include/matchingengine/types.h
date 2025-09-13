@@ -5,8 +5,9 @@
 
 namespace core
 {
-        using Symbol = std::string;
         using ConnectionId = uint64_t;
+
+        using Symbol = std::string;
         using OrderId = uint64_t;
         using TradeId = uint64_t;
         using Timestamp = uint64_t;
