@@ -1,59 +1,58 @@
 #pragma once
 
 #include <functional>
-
 #include <matchingengine/types.h>
 
 namespace orderbook
 {
-        class Order
-        {
-        public:
-                Order(const Order &order) = delete;
-                Order(Order &&order) = default;
-                Order &operator=(const Order &order) = delete;
-                Order &operator=(Order &&order) = default;
-                ~Order() = default;
+    class Order
+    {
+    public:
+        Order(const Order& order) = delete;
+        Order(Order&& order) = default;
+        Order& operator=(const Order& order) = delete;
+        Order& operator=(Order&& order) = default;
+        ~Order() = default;
 
-                Order(core::OrderId id, core::Price price, core::Quantity quantity, core::Side side,
-                      core::Timestamp timestamp);
+        Order(
+            core::OrderId id, core::Price price, core::Quantity quantity,
+            core::Side side, core::Timestamp timestamp
+        );
 
-                auto operator==(const Order &order) const -> bool;
+        bool operator==(const Order& order) const;
 
-                auto operator!=(const Order &order) const -> bool;
+        bool operator!=(const Order& order) const;
 
-                friend auto operator<<(std::ostream &os, const Order &order) -> std::ostream &;
+        friend std::ostream& operator<<(std::ostream& os, const Order& order);
 
-                auto set_quantity(core::Quantity quantity, core::Timestamp timestamp) -> void;
+        void set_quantity(core::Quantity quantity, core::Timestamp timestamp);
 
-                auto add_quantity(core::Quantity quantity) -> void;
+        void add_quantity(core::Quantity quantity);
 
-                auto remove_quantity(core::Quantity quantity) -> void;
+        void remove_quantity(core::Quantity quantity);
 
-                [[nodiscard]] auto id() const -> core::OrderId;
+        [[nodiscard]] core::OrderId id() const;
 
-                [[nodiscard]] auto price() const -> core::Price;
+        [[nodiscard]] core::Price price() const;
 
-                [[nodiscard]] auto quantity() const -> core::Quantity;
+        [[nodiscard]] core::Quantity quantity() const;
 
-                [[nodiscard]] auto side() const -> core::Side;
+        [[nodiscard]] core::Side side() const;
 
-                [[nodiscard]] auto timestamp() const -> core::Timestamp;
+        [[nodiscard]] core::Timestamp timestamp() const;
 
-        private:
-                core::OrderId f_id;
-                core::Price f_price;
-                core::Quantity f_quantity;
-                core::Side f_side;
-                core::Timestamp f_timestamp;
-        };
+    private:
+        core::OrderId f_id;
+        core::Price f_price;
+        core::Quantity f_quantity;
+        core::Side f_side;
+        core::Timestamp f_timestamp;
+    };
 } // namespace orderbook
 
-template<>
-struct std::hash<orderbook::Order>
-{
-        std::size_t operator()(const orderbook::Order &order) const noexcept
-        {
-                return std::hash<core::OrderId>()(order.id());
-        }
+template <> struct std::hash<orderbook::Order> {
+    std::size_t operator()(const orderbook::Order& order) const noexcept
+    {
+        return std::hash<core::OrderId>()(order.id());
+    }
 };

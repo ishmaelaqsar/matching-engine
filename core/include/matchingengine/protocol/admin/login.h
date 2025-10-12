@@ -5,66 +5,66 @@
 
 namespace core::protocol::admin
 {
-        class LoginRequest final : public Message<LoginRequest>
-        {
-        public:
-                LoginRequest() = default;
-                LoginRequest(const LoginRequest &LoginRequest) = default;
-                LoginRequest(LoginRequest &&LoginRequest) = default;
-                LoginRequest &operator=(const LoginRequest &LoginRequest) = default;
-                LoginRequest &operator=(LoginRequest &&LoginRequest) = default;
-                ~LoginRequest() = default;
+    class LoginRequest final : public Message<LoginRequest>
+    {
+    public:
+        LoginRequest() = default;
+        LoginRequest(const LoginRequest& LoginRequest) = default;
+        LoginRequest(LoginRequest&& LoginRequest) = default;
+        LoginRequest& operator=(const LoginRequest& LoginRequest) = default;
+        LoginRequest& operator=(LoginRequest&& LoginRequest) = default;
+        ~LoginRequest() = default;
 
-                explicit LoginRequest(const std::string &username);
+        explicit LoginRequest(const std::string& username);
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto username() const -> const std::string &;
+        [[nodiscard]] const std::string& username() const;
 
-        private:
-                std::string f_username{};
-        };
+    private:
+        std::string f_username{};
+    };
 
-        class LoginResponse final : public Message<LoginResponse>
-        {
-        public:
-                LoginResponse() = default;
-                LoginResponse(const LoginResponse &LoginResponse) = default;
-                LoginResponse(LoginResponse &&LoginResponse) = default;
-                LoginResponse &operator=(const LoginResponse &LoginResponse) = default;
-                LoginResponse &operator=(LoginResponse &&LoginResponse) = default;
-                ~LoginResponse() = default;
+    class LoginResponse final : public Message<LoginResponse>
+    {
+    public:
+        LoginResponse() = default;
+        LoginResponse(const LoginResponse& LoginResponse) = default;
+        LoginResponse(LoginResponse&& LoginResponse) = default;
+        LoginResponse& operator=(const LoginResponse& LoginResponse) = default;
+        LoginResponse& operator=(LoginResponse&& LoginResponse) = default;
+        ~LoginResponse() = default;
 
-                LoginResponse(const std::string &username, bool success);
+        LoginResponse(const std::string& username, bool success);
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto username() const -> const std::string &;
+        [[nodiscard]] const std::string& username() const;
 
-                [[nodiscard]] auto success() const -> bool;
+        [[nodiscard]] bool success() const;
 
-        private:
-                std::string f_username{};
-                bool f_success{};
-        };
+    private:
+        std::string f_username{};
+        bool f_success{};
+    };
 } // namespace core::protocol::admin

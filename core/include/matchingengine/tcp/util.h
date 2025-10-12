@@ -1,29 +1,31 @@
 #pragma once
 
 #include <boost/lockfree/queue.hpp>
-#include <variant>
-
 #include <matchingengine/protocol/info/error.h>
 #include <matchingengine/protocol/info/info.h>
+#include <variant>
 
 namespace tcp
 {
-        using InfoMessages = std::variant<core::protocol::info::Info, core::protocol::info::Error>;
+    struct InitCommand {
+        core::ConnectionId id;
+        core::Username username;
+    };
 
-        struct InfoCommand
-        {
-                std::pair<core::ConnectionId, InfoMessages> id_message;
-        };
+    struct InfoCommand {
+        core::ConnectionId id;
+        core::protocol::info::Info message;
+    };
 
-        struct InitCommand
-        {
-                std::tuple<core::ConnectionId, std::string_view, core::protocol::info::Info> id_username;
-        };
+    struct ErrorCommand {
+        core::ConnectionId id;
+        core::protocol::info::Error message;
+    };
 
-        struct StopCommand
-        {
-                core::ConnectionId connection_id;
-        };
+    struct StopCommand {
+        core::ConnectionId id;
+    };
 
-        using Messages = std::variant<InfoCommand, StopCommand>;
+    using Command =
+        std::variant<InitCommand, InfoCommand, ErrorCommand, StopCommand>;
 } // namespace tcp

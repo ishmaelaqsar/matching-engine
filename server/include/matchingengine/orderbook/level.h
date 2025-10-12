@@ -2,52 +2,55 @@
 
 #include <boost/log/trivial.hpp>
 #include <deque>
-#include <vector>
-
 #include <matchingengine/orderbook/order.h>
 #include <matchingengine/orderbook/shared_counter.h>
 #include <matchingengine/orderbook/trade.h>
 #include <matchingengine/types.h>
+#include <vector>
 
 namespace orderbook
 {
-        class Level
-        {
-        public:
-                using OrderCallback = std::function<void(const core::OrderId &)>;
+    class Level
+    {
+    public:
+        using OrderCallback = std::function<void(const core::OrderId&)>;
 
-                Level(const Level &level) = delete;
-                Level(Level &&level) noexcept = default;
-                ~Level() = default;
-                Level &operator=(const Level &level) = delete;
-                Level &operator=(Level &&level) = default;
+        Level(const Level& level) = delete;
+        Level(Level&& level) noexcept = default;
+        ~Level() = default;
+        Level& operator=(const Level& level) = delete;
+        Level& operator=(Level&& level) = default;
 
-                Level(core::Price price, const SharedCounter<core::TradeId> &id_counter);
+        Level(
+            core::Price price, const SharedCounter<core::TradeId>& id_counter
+        );
 
-                friend auto operator<<(std::ostream &os, const Level &level) -> std::ostream &;
+        friend std::ostream& operator<<(std::ostream& os, const Level& level);
 
-                [[nodiscard]] auto empty() const -> bool;
+        [[nodiscard]] bool empty() const;
 
-                [[nodiscard]] auto price() const -> core::Price;
+        [[nodiscard]] core::Price price() const;
 
-                [[nodiscard]] auto quantity() const -> core::Quantity;
+        [[nodiscard]] core::Quantity quantity() const;
 
-                auto add_quantity(core::Quantity quantity) -> void;
+        void add_quantity(core::Quantity quantity);
 
-                auto remove_quantity(core::Quantity quantity) -> void;
+        void remove_quantity(core::Quantity quantity);
 
-                auto add_order(std::unique_ptr<Order> order) -> void;
+        void add_order(std::unique_ptr<Order> order);
 
-                auto remove_order(const core::OrderId &id) -> void;
+        void remove_order(const core::OrderId& id);
 
-                auto match_order(const std::unique_ptr<Order> &incoming, const OrderCallback &on_fill) -> std::vector<Trade>;
+        std::vector<Trade> match_order(
+            const std::unique_ptr<Order>& incoming, const OrderCallback& on_fill
+        );
 
-        private:
-                core::Price f_price;
-                SharedCounter<core::TradeId> f_id_counter;
-                core::Quantity f_quantity = 0;
+    private:
+        core::Price f_price;
+        SharedCounter<core::TradeId> f_id_counter;
+        core::Quantity f_quantity = 0;
 
-                std::deque<std::unique_ptr<Order>> f_orders;
-        };
+        std::deque<std::unique_ptr<Order>> f_orders;
+    };
 
 } // namespace orderbook

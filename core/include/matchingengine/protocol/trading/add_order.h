@@ -5,88 +5,92 @@
 
 namespace core::protocol::trading
 {
-        class AddOrderRequest final : public Message<AddOrderRequest>
-        {
-        public:
-                AddOrderRequest() = default;
-                AddOrderRequest(const AddOrderRequest &request) = default;
-                AddOrderRequest(AddOrderRequest &&request) = default;
-                AddOrderRequest &operator=(const AddOrderRequest &request) = default;
-                AddOrderRequest &operator=(AddOrderRequest &&request) = default;
-                ~AddOrderRequest() = default;
+    class AddOrderRequest final : public Message<AddOrderRequest>
+    {
+    public:
+        AddOrderRequest() = default;
+        AddOrderRequest(const AddOrderRequest& request) = default;
+        AddOrderRequest(AddOrderRequest&& request) = default;
+        AddOrderRequest& operator=(const AddOrderRequest& request) = default;
+        AddOrderRequest& operator=(AddOrderRequest&& request) = default;
+        ~AddOrderRequest() = default;
 
-                AddOrderRequest(Symbol symbol, Price price, Quantity quantity, Side side);
+        AddOrderRequest(
+            Symbol symbol, Price price, Quantity quantity, Side side
+        );
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> Symbol;
+        [[nodiscard]] Symbol symbol() const;
 
-                [[nodiscard]] auto price() const -> Price;
+        [[nodiscard]] Price price() const;
 
-                [[nodiscard]] auto quantity() const -> Quantity;
+        [[nodiscard]] Quantity quantity() const;
 
-                [[nodiscard]] auto side() const -> Side;
+        [[nodiscard]] Side side() const;
 
-        private:
-                Symbol f_symbol{};
-                Price f_price{};
-                Quantity f_quantity{};
-                Side f_side = Side::Unknown;
-        };
+    private:
+        Symbol f_symbol{};
+        Price f_price{};
+        Quantity f_quantity{};
+        Side f_side = Side::Unknown;
+    };
 
-        class AddOrderResponse final : public Message<AddOrderResponse>
-        {
-        public:
-                AddOrderResponse() = default;
-                AddOrderResponse(const AddOrderResponse &response) = default;
-                AddOrderResponse(AddOrderResponse &&response) = default;
-                AddOrderResponse &operator=(const AddOrderResponse &response) = default;
-                AddOrderResponse &operator=(AddOrderResponse &&response) = default;
-                ~AddOrderResponse() = default;
+    class AddOrderResponse final : public Message<AddOrderResponse>
+    {
+    public:
+        AddOrderResponse() = default;
+        AddOrderResponse(const AddOrderResponse& response) = default;
+        AddOrderResponse(AddOrderResponse&& response) = default;
+        AddOrderResponse& operator=(const AddOrderResponse& response) = default;
+        AddOrderResponse& operator=(AddOrderResponse&& response) = default;
+        ~AddOrderResponse() = default;
 
-                AddOrderResponse(Symbol symbol, OrderId order_id, Price price, Quantity quantity, Side side,
-                                 Timestamp timestamp);
+        AddOrderResponse(
+            Symbol symbol, OrderId order_id, Price price, Quantity quantity,
+            Side side, Timestamp timestamp
+        );
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> Symbol;
+        [[nodiscard]] Symbol symbol() const;
 
-                [[nodiscard]] auto order_id() const -> OrderId;
+        [[nodiscard]] OrderId order_id() const;
 
-                [[nodiscard]] auto price() const -> Price;
+        [[nodiscard]] Price price() const;
 
-                [[nodiscard]] auto quantity() const -> Quantity;
+        [[nodiscard]] Quantity quantity() const;
 
-                [[nodiscard]] auto side() const -> Side;
+        [[nodiscard]] Side side() const;
 
-                [[nodiscard]] auto timestamp() const -> Timestamp;
+        [[nodiscard]] Timestamp timestamp() const;
 
-        private:
-                Symbol f_symbol{};
-                OrderId f_order_id{};
-                Price f_price{};
-                Quantity f_quantity{};
-                Side f_side = Side::Unknown;
-                Timestamp f_timestamp{};
-        };
+    private:
+        Symbol f_symbol{};
+        OrderId f_order_id{};
+        Price f_price{};
+        Quantity f_quantity{};
+        Side f_side = Side::Unknown;
+        Timestamp f_timestamp{};
+    };
 } // namespace core::protocol::trading

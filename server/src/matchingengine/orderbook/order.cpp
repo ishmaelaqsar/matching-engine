@@ -3,71 +3,78 @@
 namespace orderbook
 {
 
-        Order::Order(const core::OrderId id, const core::Price price, const core::Quantity quantity,
-                     const core::Side side, const core::Timestamp timestamp) :
-            f_id(id), f_price(price), f_quantity(quantity), f_side(side), f_timestamp(timestamp)
-        {}
+    Order::Order(
+        const core::OrderId id, const core::Price price,
+        const core::Quantity quantity, const core::Side side,
+        const core::Timestamp timestamp
+    )
+        : f_id(id), f_price(price), f_quantity(quantity), f_side(side),
+          f_timestamp(timestamp)
+    {
+    }
 
-        auto Order::operator==(const Order &order) const -> bool
-        {
-                return this->f_id == order.f_id;
-        }
+    bool Order::operator==(const Order& order) const
+    {
+        return this->f_id == order.f_id;
+    }
 
-        auto Order::operator!=(const Order &order) const -> bool
-        {
-                return !(*this == order);
-        }
+    bool Order::operator!=(const Order& order) const
+    {
+        return !(*this == order);
+    }
 
-        auto operator<<(std::ostream &os, const Order &order) -> std::ostream &
-        {
-                os << "Order{";
-                os << "id: " << order.f_id << ", ";
-                os << "price: " << order.f_price << ", ";
-                os << "quantity: " << order.f_quantity << ", ";
-                os << "side: " << order.f_side << ", ";
-                os << "timestamp: " << order.f_timestamp;
-                os << "}";
-                return os;
-        }
+    std::ostream& operator<<(std::ostream& os, const Order& order)
+    {
+        os << "Order{";
+        os << "id: " << order.f_id << ", ";
+        os << "price: " << order.f_price << ", ";
+        os << "quantity: " << order.f_quantity << ", ";
+        os << "side: " << order.f_side << ", ";
+        os << "timestamp: " << order.f_timestamp;
+        os << "}";
+        return os;
+    }
 
-        auto Order::set_quantity(const core::Quantity quantity, const core::Timestamp timestamp) -> void
-        {
-                f_quantity = quantity;
-                f_timestamp = timestamp;
-        }
+    void Order::set_quantity(
+        const core::Quantity quantity, const core::Timestamp timestamp
+    )
+    {
+        f_quantity = quantity;
+        f_timestamp = timestamp;
+    }
 
-        auto Order::add_quantity(const core::Quantity quantity) -> void
-        {
-                f_quantity += quantity;
-        }
+    void Order::add_quantity(const core::Quantity quantity)
+    {
+        f_quantity += quantity;
+    }
 
-        auto Order::remove_quantity(const core::Quantity quantity) -> void
-        {
-                f_quantity -= quantity;
-        }
+    void Order::remove_quantity(const core::Quantity quantity)
+    {
+        f_quantity -= quantity;
+    }
 
-        auto Order::id() const -> core::OrderId
-        {
-                return f_id;
-        }
+    core::OrderId Order::id() const
+    {
+        return f_id;
+    }
 
-        auto Order::price() const -> core::Price
-        {
-                return f_price;
-        }
+    core::Price Order::price() const
+    {
+        return f_price;
+    }
 
-        auto Order::quantity() const -> core::Quantity
-        {
-                return f_quantity;
-        }
+    core::Quantity Order::quantity() const
+    {
+        return f_quantity;
+    }
 
-        auto Order::side() const -> core::Side
-        {
-                return f_side;
-        }
+    core::Side Order::side() const
+    {
+        return f_side;
+    }
 
-        auto Order::timestamp() const -> core::Timestamp
-        {
-                return f_timestamp;
-        }
+    core::Timestamp Order::timestamp() const
+    {
+        return f_timestamp;
+    }
 } // namespace orderbook

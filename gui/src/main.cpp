@@ -8,19 +8,23 @@
 void init_logging()
 {
 #ifdef NDEBUG
-        // Release mode: only info and above
-        boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+    // Release mode: only info and above
+    boost::log::core::get()->set_filter(
+        boost::log::trivial::severity >= boost::log::trivial::info
+    );
 #else
-        // Debug mode: all logs
-        boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
+    // Debug mode: all logs
+    boost::log::core::get()->set_filter(
+        boost::log::trivial::severity >= boost::log::trivial::trace
+    );
 #endif
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-        QApplication app(argc, argv);
-        init_logging();
-        MainWindow w;
-        w.show();
-        return app.exec();
+    QApplication app(argc, argv);
+    init_logging();
+    MainWindow w;
+    w.show();
+    return app.exec();
 }
