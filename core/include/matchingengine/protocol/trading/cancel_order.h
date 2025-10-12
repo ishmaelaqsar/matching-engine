@@ -5,72 +5,75 @@
 
 namespace core::protocol::trading
 {
-        class CancelOrderRequest final : public Message<CancelOrderRequest>
-        {
-        public:
-                CancelOrderRequest() = default;
-                CancelOrderRequest(const CancelOrderRequest &request) = default;
-                CancelOrderRequest(CancelOrderRequest &&request) = default;
-                CancelOrderRequest &operator=(const CancelOrderRequest &request) = default;
-                CancelOrderRequest &operator=(CancelOrderRequest &&request) = default;
-                ~CancelOrderRequest() = default;
+    class CancelOrderRequest final : public Message<CancelOrderRequest>
+    {
+    public:
+        CancelOrderRequest() = default;
+        CancelOrderRequest(const CancelOrderRequest& request) = default;
+        CancelOrderRequest(CancelOrderRequest&& request) = default;
+        CancelOrderRequest& operator=(const CancelOrderRequest& request
+        ) = default;
+        CancelOrderRequest& operator=(CancelOrderRequest&& request) = default;
+        ~CancelOrderRequest() = default;
 
-                CancelOrderRequest(Symbol symbol, OrderId order_id);
+        CancelOrderRequest(Symbol symbol, OrderId order_id);
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> Symbol;
+        [[nodiscard]] Symbol symbol() const;
 
-                [[nodiscard]] auto order_id() const -> OrderId;
+        [[nodiscard]] OrderId order_id() const;
 
-        private:
-                Symbol f_symbol{};
-                OrderId f_order_id{};
-        };
+    private:
+        Symbol f_symbol{};
+        OrderId f_order_id{};
+    };
 
-        class CancelOrderResponse final : public Message<CancelOrderResponse>
-        {
-        public:
-                CancelOrderResponse() = default;
-                CancelOrderResponse(const CancelOrderResponse &response) = default;
-                CancelOrderResponse(CancelOrderResponse &&response) = default;
-                CancelOrderResponse &operator=(const CancelOrderResponse &response) = default;
-                CancelOrderResponse &operator=(CancelOrderResponse &&response) = default;
-                ~CancelOrderResponse() = default;
+    class CancelOrderResponse final : public Message<CancelOrderResponse>
+    {
+    public:
+        CancelOrderResponse() = default;
+        CancelOrderResponse(const CancelOrderResponse& response) = default;
+        CancelOrderResponse(CancelOrderResponse&& response) = default;
+        CancelOrderResponse& operator=(const CancelOrderResponse& response
+        ) = default;
+        CancelOrderResponse& operator=(CancelOrderResponse&& response
+        ) = default;
+        ~CancelOrderResponse() = default;
 
-                CancelOrderResponse(Symbol symbol, OrderId order_id, bool success);
+        CancelOrderResponse(Symbol symbol, OrderId order_id, bool success);
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> Symbol;
+        [[nodiscard]] Symbol symbol() const;
 
-                [[nodiscard]] auto order_id() const -> OrderId;
+        [[nodiscard]] OrderId order_id() const;
 
-                [[nodiscard]] auto success() const -> bool;
+        [[nodiscard]] bool success() const;
 
-        private:
-                Symbol f_symbol{};
-                OrderId f_order_id{};
-                bool f_success{};
-        };
+    private:
+        Symbol f_symbol{};
+        OrderId f_order_id{};
+        bool f_success{};
+    };
 } // namespace core::protocol::trading

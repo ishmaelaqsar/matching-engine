@@ -1,88 +1,94 @@
 #pragma once
 
+#include <matchingengine/protocol/message.h>
+#include <matchingengine/types.h>
 #include <unordered_map>
 #include <vector>
 
-#include <matchingengine/protocol/message.h>
-#include <matchingengine/types.h>
-
 namespace core::protocol::view
 {
-        struct Order
-        {
-                Order() = default;
+    struct Order {
+        Order() = default;
 
-                Order(const OrderId &id, const Price &price, const Quantity &quantity, const Side &side,
-                      const Timestamp &timestamp);
+        Order(
+            const OrderId& id, const Price& price, const Quantity& quantity,
+            const Side& side, const Timestamp& timestamp
+        );
 
-                auto operator<<(std::ostream &os) const -> std::ostream &;
+        std::ostream& operator<<(std::ostream& os) const;
 
-                OrderId id{};
-                Price price{};
-                Quantity quantity{};
-                Side side{};
-                Timestamp timestamp{};
-        };
+        OrderId id{};
+        Price price{};
+        Quantity quantity{};
+        Side side{};
+        Timestamp timestamp{};
+    };
 
-        class GetOrdersRequest final : public Message<GetOrdersRequest>
-        {
-        public:
-                GetOrdersRequest() = default;
-                GetOrdersRequest(const GetOrdersRequest &) = default;
-                GetOrdersRequest(GetOrdersRequest &&) = default;
-                GetOrdersRequest &operator=(const GetOrdersRequest &) = default;
-                GetOrdersRequest &operator=(GetOrdersRequest &&) = default;
-                ~GetOrdersRequest() = default;
+    class GetOrdersRequest final : public Message<GetOrdersRequest>
+    {
+    public:
+        GetOrdersRequest() = default;
+        GetOrdersRequest(const GetOrdersRequest&) = default;
+        GetOrdersRequest(GetOrdersRequest&&) = default;
+        GetOrdersRequest& operator=(const GetOrdersRequest&) = default;
+        GetOrdersRequest& operator=(GetOrdersRequest&&) = default;
+        ~GetOrdersRequest() = default;
 
-                explicit GetOrdersRequest(std::string username);
+        explicit GetOrdersRequest(std::string username);
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(unsigned const char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto username() const -> std::string;
+        [[nodiscard]] std::string username() const;
 
-        private:
-                std::string f_username{};
-        };
+    private:
+        std::string f_username{};
+    };
 
-        class GetOrdersResponse final : public Message<GetOrdersResponse>
-        {
-        public:
-                GetOrdersResponse() = default;
-                GetOrdersResponse(const GetOrdersResponse &response) = default;
-                GetOrdersResponse(GetOrdersResponse &&response) = default;
-                GetOrdersResponse &operator=(const GetOrdersResponse &) = default;
-                GetOrdersResponse &operator=(GetOrdersResponse &&) = default;
-                ~GetOrdersResponse() = default;
+    class GetOrdersResponse final : public Message<GetOrdersResponse>
+    {
+    public:
+        GetOrdersResponse() = default;
+        GetOrdersResponse(const GetOrdersResponse& response) = default;
+        GetOrdersResponse(GetOrdersResponse&& response) = default;
+        GetOrdersResponse& operator=(const GetOrdersResponse&) = default;
+        GetOrdersResponse& operator=(GetOrdersResponse&&) = default;
+        ~GetOrdersResponse() = default;
 
-                explicit GetOrdersResponse(std::unordered_map<Symbol, std::vector<Order>> orders_by_symbol);
+        explicit GetOrdersResponse(
+            std::unordered_map<Symbol, std::vector<Order>> orders_by_symbol
+        );
 
-                explicit GetOrdersResponse(std::unordered_map<Symbol, std::initializer_list<Order>> orders_by_symbol);
+        explicit GetOrdersResponse(
+            std::unordered_map<Symbol, std::initializer_list<Order>>
+                orders_by_symbol
+        );
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto orders() const -> std::unordered_map<Symbol, std::vector<Order>>;
+        [[nodiscard]] std::unordered_map<Symbol, std::vector<Order>>
+        orders() const;
 
-        private:
-                std::unordered_map<Symbol, std::vector<Order>> f_orders_by_symbol{};
-        };
+    private:
+        std::unordered_map<Symbol, std::vector<Order>> f_orders_by_symbol{};
+    };
 } // namespace core::protocol::view

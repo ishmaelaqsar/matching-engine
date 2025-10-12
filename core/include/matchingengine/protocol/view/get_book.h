@@ -1,95 +1,100 @@
 #pragma once
 
+#include <matchingengine/protocol/message.h>
+#include <matchingengine/types.h>
 #include <utility>
 #include <vector>
 
-#include <matchingengine/protocol/message.h>
-#include <matchingengine/types.h>
-
 namespace core::protocol::view
 {
-        struct Level
-        {
-                Level() = default;
+    struct Level {
+        Level() = default;
 
-                Level(const Price &price, const Quantity &quantity);
+        Level(const Price& price, const Quantity& quantity);
 
-                explicit Level(const std::pair<Price, Quantity> &pair);
+        explicit Level(const std::pair<Price, Quantity>& pair);
 
-                auto operator<<(std::ostream &os) const -> std::ostream &;
+        std::ostream& operator<<(std::ostream& os) const;
 
-                Price price{};
-                Quantity quantity{};
-        };
+        Price price{};
+        Quantity quantity{};
+    };
 
-        class GetBookRequest final : public Message<GetBookRequest>
-        {
-        public:
-                GetBookRequest() = default;
-                GetBookRequest(const GetBookRequest &) = default;
-                GetBookRequest(GetBookRequest &&) = default;
-                GetBookRequest &operator=(const GetBookRequest &) = default;
-                GetBookRequest &operator=(GetBookRequest &&) = default;
-                ~GetBookRequest() = default;
+    class GetBookRequest final : public Message<GetBookRequest>
+    {
+    public:
+        GetBookRequest() = default;
+        GetBookRequest(const GetBookRequest&) = default;
+        GetBookRequest(GetBookRequest&&) = default;
+        GetBookRequest& operator=(const GetBookRequest&) = default;
+        GetBookRequest& operator=(GetBookRequest&&) = default;
+        ~GetBookRequest() = default;
 
-                explicit GetBookRequest(Symbol symbol);
+        explicit GetBookRequest(Symbol symbol);
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(unsigned const char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> Symbol;
+        [[nodiscard]] Symbol symbol() const;
 
-        private:
-                Symbol f_symbol{};
-        };
+    private:
+        Symbol f_symbol{};
+    };
 
-        class GetBookResponse final : public Message<GetBookResponse>
-        {
-        public:
-                GetBookResponse() = default;
-                GetBookResponse(const GetBookResponse &response) = default;
-                GetBookResponse(GetBookResponse &&response) = default;
-                GetBookResponse &operator=(const GetBookResponse &) = default;
-                GetBookResponse &operator=(GetBookResponse &&) = default;
-                ~GetBookResponse() = default;
+    class GetBookResponse final : public Message<GetBookResponse>
+    {
+    public:
+        GetBookResponse() = default;
+        GetBookResponse(const GetBookResponse& response) = default;
+        GetBookResponse(GetBookResponse&& response) = default;
+        GetBookResponse& operator=(const GetBookResponse&) = default;
+        GetBookResponse& operator=(GetBookResponse&&) = default;
+        ~GetBookResponse() = default;
 
-                GetBookResponse(Symbol symbol, std::vector<Level> bids, std::vector<Level> asks);
+        GetBookResponse(
+            Symbol symbol, std::vector<Level> bids, std::vector<Level> asks
+        );
 
-                GetBookResponse(Symbol symbol, std::initializer_list<Level> bids, std::initializer_list<Level> asks);
+        GetBookResponse(
+            Symbol symbol, std::initializer_list<Level> bids,
+            std::initializer_list<Level> asks
+        );
 
-                GetBookResponse(Symbol symbol, const std::vector<std::pair<Price, Quantity>> &bids,
-                                const std::vector<std::pair<Price, Quantity>> &asks);
+        GetBookResponse(
+            Symbol symbol, const std::vector<std::pair<Price, Quantity>>& bids,
+            const std::vector<std::pair<Price, Quantity>>& asks
+        );
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> Symbol;
+        [[nodiscard]] Symbol symbol() const;
 
-                [[nodiscard]] auto bids() const -> std::vector<Level>;
+        [[nodiscard]] std::vector<Level> bids() const;
 
-                [[nodiscard]] auto asks() const -> std::vector<Level>;
+        [[nodiscard]] std::vector<Level> asks() const;
 
-        private:
-                Symbol f_symbol{};
-                std::vector<Level> f_bids{};
-                std::vector<Level> f_asks{};
-        };
+    private:
+        Symbol f_symbol{};
+        std::vector<Level> f_bids{};
+        std::vector<Level> f_asks{};
+    };
 } // namespace core::protocol::view

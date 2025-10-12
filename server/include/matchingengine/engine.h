@@ -1,59 +1,69 @@
 #pragma once
 
-#include <unordered_map>
-
 #include <matchingengine/orderbook/book.h>
 #include <matchingengine/ring_buffer.h>
 #include <matchingengine/types.h>
+#include <unordered_map>
 
 namespace orderbook
 {
-        class Engine
-        {
-        public:
-                Engine(const core::RingBuffer<core::Payload> &inbound_buffer,
-                       const core::RingBuffer<core::Payload> &outbound_buffer);
+    class Engine
+    {
+    public:
+        Engine(
+            core::RingBuffer<core::Payload>* inbound_buffer,
+            core::RingBuffer<core::Payload>* outbound_buffer
+        );
 
-                auto do_work() -> int;
+        auto do_work() -> int;
 
-        private:
-                template<typename Message>
-                static auto serialize(core::ConnectionId connectionId, Message &&response) -> core::Payload;
+    private:
+        template <typename Message>
+        static core::Payload
+        serialize(core::ConnectionId connectionId, Message&& response);
 
-                template<typename SubMessage>
-                static auto deserialize(const core::Payload &payload) -> SubMessage;
+        template <typename SubMessage>
+        static SubMessage deserialize(const core::Payload& payload);
 
-                auto get_book(const core::Symbol &symbol) -> Book &;
+        Book& get_book(const core::Symbol& symbol);
 
-                auto handle_get_book_request(const core::Payload &payload) -> void;
-                auto handle_add_order_request(const core::Payload &payload, core::Timestamp timestamp) -> void;
-                auto handle_modify_order_request(const core::Payload &payload, core::Timestamp timestamp) -> void;
-                auto handle_cancel_order_request(const core::Payload &payload) -> void;
+        void handle_get_book_request(const core::Payload& payload);
+        void handle_add_order_request(
+            const core::Payload& payload, core::Timestamp timestamp
+        );
+        void handle_modify_order_request(
+            const core::Payload& payload, core::Timestamp timestamp
+        );
+        void handle_cancel_order_request(const core::Payload& payload);
 
-                std::unordered_map<core::Symbol, std::unique_ptr<Book>> f_order_books{};
-                std::unordered_map<core::Symbol, std::vector<std::unique_ptr<Order>>> f_orders_by_user{};
-                const core::RingBuffer<core::Payload> &f_inbound_buffer;
-                const core::RingBuffer<core::Payload> &f_outbound_buffer;
-        };
+        std::unordered_map<core::Symbol, std::unique_ptr<Book>> f_order_books{};
+        std::unordered_map<std::string, std::vector<std::unique_ptr<Order>>>
+            f_orders_by_user{};
+        core::RingBuffer<core::Payload>* f_inbound_buffer;
+        core::RingBuffer<core::Payload>* f_outbound_buffer;
+    };
 
-        template<typename Message>
-        auto Engine::serialize(const core::ConnectionId connectionId, Message &&response) -> core::Payload
-        {
-                auto payload = core::Payload{};
-                payload.connection_id = connectionId;
-                payload.header = {response.type(), response.size()};
-                response.serialize(payload.data.data());
-                return payload;
-        }
+    template <typename Message>
+    core::Payload
+    Engine::serialize(const core::ConnectionId connectionId, Message&& response)
+    {
+        auto payload = core::Payload{};
+        payload.connection_id = connectionId;
+        payload.header = {response.type(), response.size()};
+        response.serialize(payload.data.data());
+        return payload;
+    }
 
-        template<typename SubMessage>
-        auto Engine::deserialize(const core::Payload &payload) -> SubMessage
-        {
-                static_assert(std::is_base_of_v<core::protocol::Message<SubMessage>, SubMessage>,
-                              "SubMessage must derive from Message<SubMessage>");
+    template <typename SubMessage>
+    SubMessage Engine::deserialize(const core::Payload& payload)
+    {
+        static_assert(
+            std::is_base_of_v<core::protocol::Message<SubMessage>, SubMessage>,
+            "SubMessage must derive from Message<SubMessage>"
+        );
 
-                SubMessage msg = SubMessage{};
-                msg.deserialize(payload.data.data());
-                return msg;
-        }
+        SubMessage msg = SubMessage{};
+        msg.deserialize(payload.data.data());
+        return msg;
+    }
 } // namespace orderbook

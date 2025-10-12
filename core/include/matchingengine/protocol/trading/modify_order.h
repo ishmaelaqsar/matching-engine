@@ -5,78 +5,83 @@
 
 namespace core::protocol::trading
 {
-        class ModifyOrderRequest final : public Message<ModifyOrderRequest>
-        {
-        public:
-                ModifyOrderRequest() = default;
-                ModifyOrderRequest(const ModifyOrderRequest &request) = default;
-                ModifyOrderRequest(ModifyOrderRequest &&request) = default;
-                ModifyOrderRequest &operator=(const ModifyOrderRequest &request) = default;
-                ModifyOrderRequest &operator=(ModifyOrderRequest &&request) = default;
-                ~ModifyOrderRequest() = default;
+    class ModifyOrderRequest final : public Message<ModifyOrderRequest>
+    {
+    public:
+        ModifyOrderRequest() = default;
+        ModifyOrderRequest(const ModifyOrderRequest& request) = default;
+        ModifyOrderRequest(ModifyOrderRequest&& request) = default;
+        ModifyOrderRequest& operator=(const ModifyOrderRequest& request
+        ) = default;
+        ModifyOrderRequest& operator=(ModifyOrderRequest&& request) = default;
+        ~ModifyOrderRequest() = default;
 
-                ModifyOrderRequest(Symbol symbol, OrderId order_id, Quantity quantity);
+        ModifyOrderRequest(Symbol symbol, OrderId order_id, Quantity quantity);
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> Symbol;
+        [[nodiscard]] Symbol symbol() const;
 
-                [[nodiscard]] auto order_id() const -> OrderId;
+        [[nodiscard]] OrderId order_id() const;
 
-                [[nodiscard]] auto quantity() const -> Quantity;
+        [[nodiscard]] Quantity quantity() const;
 
-        private:
-                Symbol f_symbol{};
-                OrderId f_order_id{};
-                Quantity f_quantity{};
-        };
+    private:
+        Symbol f_symbol{};
+        OrderId f_order_id{};
+        Quantity f_quantity{};
+    };
 
-        class ModifyOrderResponse final : public Message<ModifyOrderResponse>
-        {
-        public:
-                ModifyOrderResponse() = default;
-                ModifyOrderResponse(const ModifyOrderResponse &response) = default;
-                ModifyOrderResponse(ModifyOrderResponse &&response) = default;
-                ModifyOrderResponse &operator=(const ModifyOrderResponse &response) = default;
-                ModifyOrderResponse &operator=(ModifyOrderResponse &&response) = default;
-                ~ModifyOrderResponse() = default;
+    class ModifyOrderResponse final : public Message<ModifyOrderResponse>
+    {
+    public:
+        ModifyOrderResponse() = default;
+        ModifyOrderResponse(const ModifyOrderResponse& response) = default;
+        ModifyOrderResponse(ModifyOrderResponse&& response) = default;
+        ModifyOrderResponse& operator=(const ModifyOrderResponse& response
+        ) = default;
+        ModifyOrderResponse& operator=(ModifyOrderResponse&& response
+        ) = default;
+        ~ModifyOrderResponse() = default;
 
-                ModifyOrderResponse(Symbol symbol, OrderId order_id, Quantity quantity, bool success);
+        ModifyOrderResponse(
+            Symbol symbol, OrderId order_id, Quantity quantity, bool success
+        );
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> Symbol;
+        [[nodiscard]] Symbol symbol() const;
 
-                [[nodiscard]] auto order_id() const -> OrderId;
+        [[nodiscard]] OrderId order_id() const;
 
-                [[nodiscard]] auto quantity() const -> Quantity;
+        [[nodiscard]] Quantity quantity() const;
 
-                [[nodiscard]] auto success() const -> bool;
+        [[nodiscard]] bool success() const;
 
-        private:
-                Symbol f_symbol{};
-                OrderId f_order_id{};
-                Quantity f_quantity{};
-                bool f_success{};
-        };
+    private:
+        Symbol f_symbol{};
+        OrderId f_order_id{};
+        Quantity f_quantity{};
+        bool f_success{};
+    };
 } // namespace core::protocol::trading

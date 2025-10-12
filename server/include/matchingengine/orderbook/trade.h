@@ -4,51 +4,52 @@
 
 namespace orderbook
 {
-        class Trade
-        {
-        public:
-                Trade(const Trade &trade) = default;
-                Trade(Trade &&trade) = default;
-                Trade &operator=(const Trade &trade) = default;
-                Trade &operator=(Trade &&trade) = default;
-                ~Trade() = default;
+    class Trade
+    {
+    public:
+        Trade(const Trade& trade) = default;
+        Trade(Trade&& trade) = default;
+        Trade& operator=(const Trade& trade) = default;
+        Trade& operator=(Trade&& trade) = default;
+        ~Trade() = default;
 
-                Trade(core::TradeId id, core::Price price, core::Quantity quantity, core::Timestamp timestamp,
-                      core::OrderId source_order, core::OrderId matched_order);
+        Trade(
+            core::TradeId id, core::Price price, core::Quantity quantity,
+            core::Timestamp timestamp, core::OrderId source_order,
+            core::OrderId matched_order
+        );
 
-                auto operator==(const Trade &trade) const -> bool;
+        bool operator==(const Trade& trade) const;
 
-                auto operator!=(const Trade &trade) const -> bool;
+        bool operator!=(const Trade& trade) const;
 
-                friend auto operator<<(std::ostream &os, const Trade &trade) -> std::ostream &;
+        friend std::ostream& operator<<(std::ostream& os, const Trade& trade);
 
-                [[nodiscard]] auto id() const -> core::TradeId;
+        [[nodiscard]] core::TradeId id() const;
 
-                [[nodiscard]] auto price() const -> core::Price;
+        [[nodiscard]] core::Price price() const;
 
-                [[nodiscard]] auto quantity() const -> core::Quantity;
+        [[nodiscard]] core::Quantity quantity() const;
 
-                [[nodiscard]] auto timestamp() const -> core::Timestamp;
+        [[nodiscard]] core::Timestamp timestamp() const;
 
-                [[nodiscard]] auto source_order() const -> core::OrderId;
+        [[nodiscard]] core::OrderId source_order() const;
 
-                [[nodiscard]] auto matched_order() const -> core::OrderId;
+        [[nodiscard]] core::OrderId matched_order() const;
 
-        private:
-                core::TradeId f_id;
-                core::Price f_price;
-                core::Quantity f_quantity;
-                core::Timestamp f_timestamp;
-                core::OrderId f_source_order;
-                core::OrderId f_matched_order;
-        };
+    private:
+        core::TradeId f_id;
+        core::Price f_price;
+        core::Quantity f_quantity;
+        core::Timestamp f_timestamp;
+        core::OrderId f_source_order;
+        core::OrderId f_matched_order;
+    };
 } // namespace orderbook
 
-template<>
-struct std::hash<orderbook::Trade>
-{
-        std::size_t operator()(const orderbook::Trade &trade) const noexcept
-        {
-                return std::hash<core::TradeId>()(trade.id());
-        }
+template <> struct std::hash<orderbook::Trade> {
+    std::size_t operator()(const orderbook::Trade& trade) const noexcept
+    {
+        return std::hash<core::TradeId>()(trade.id());
+    }
 };

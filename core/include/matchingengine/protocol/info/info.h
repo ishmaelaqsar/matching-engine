@@ -4,33 +4,33 @@
 
 namespace core::protocol::info
 {
-        class Info final : public Message<Info>
-        {
-        public:
-                Info() = default;
-                Info(const Info &Info) = default;
-                Info(Info &&Info) = default;
-                Info &operator=(const Info &Info) = default;
-                Info &operator=(Info &&Info) = default;
-                ~Info() = default;
+    class Info final : public Message<Info>
+    {
+    public:
+        Info() = default;
+        Info(const Info& Info) = default;
+        Info(Info&& Info) = default;
+        Info& operator=(const Info& Info) = default;
+        Info& operator=(Info&& Info) = default;
+        ~Info() = default;
 
-                explicit Info(const std::string &message);
+        explicit Info(const std::string& message);
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto message() const -> const std::string &;
+        [[nodiscard]] const std::string& message() const;
 
-        private:
-                std::string f_message;
-        };
+    private:
+        std::string f_message;
+    };
 } // namespace core::protocol::info

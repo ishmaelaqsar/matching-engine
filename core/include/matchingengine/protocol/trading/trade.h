@@ -5,52 +5,54 @@
 
 namespace core::protocol::trading
 {
-        class Trade final : public Message<Trade>
-        {
-        public:
-                Trade() = default;
-                Trade(const Trade &trade) = default;
-                Trade(Trade &&trade) = default;
-                Trade &operator=(const Trade &trade) = default;
-                Trade &operator=(Trade &&trade) = default;
-                ~Trade() = default;
+    class Trade final : public Message<Trade>
+    {
+    public:
+        Trade() = default;
+        Trade(const Trade& trade) = default;
+        Trade(Trade&& trade) = default;
+        Trade& operator=(const Trade& trade) = default;
+        Trade& operator=(Trade&& trade) = default;
+        ~Trade() = default;
 
-                Trade(Symbol symbol, TradeId id, Price price, Quantity quantity, Timestamp timestamp,
-                      OrderId source_order, OrderId matched_order);
+        Trade(
+            Symbol symbol, TradeId id, Price price, Quantity quantity,
+            Timestamp timestamp, OrderId source_order, OrderId matched_order
+        );
 
-                static auto type() -> MessageType;
+        static MessageType type();
 
-                auto serialize(unsigned char *dst) const -> void;
+        void serialize(unsigned char* dst) const;
 
-                auto deserialize(const unsigned char *src) -> void;
+        void deserialize(const unsigned char* src);
 
-                auto print(std::ostream &os) const -> void;
+        void print(std::ostream& os) const;
 
-                [[nodiscard]] auto to_string() const -> std::string;
+        [[nodiscard]] std::string to_string() const;
 
-                [[nodiscard]] auto size() const -> size_t;
+        [[nodiscard]] size_t size() const;
 
-                [[nodiscard]] auto symbol() const -> const Symbol &;
+        [[nodiscard]] const Symbol& symbol() const;
 
-                [[nodiscard]] auto id() const -> TradeId;
+        [[nodiscard]] TradeId id() const;
 
-                [[nodiscard]] auto price() const -> Price;
+        [[nodiscard]] Price price() const;
 
-                [[nodiscard]] auto quantity() const -> Quantity;
+        [[nodiscard]] Quantity quantity() const;
 
-                [[nodiscard]] auto timestamp() const -> Timestamp;
+        [[nodiscard]] Timestamp timestamp() const;
 
-                [[nodiscard]] auto source_order() const -> OrderId;
+        [[nodiscard]] OrderId source_order() const;
 
-                [[nodiscard]] auto matched_order() const -> OrderId;
+        [[nodiscard]] OrderId matched_order() const;
 
-        private:
-                Symbol f_symbol;
-                TradeId f_id{};
-                Price f_price{};
-                Quantity f_quantity{};
-                Timestamp f_timestamp{};
-                OrderId f_source_order{};
-                OrderId f_matched_order{};
-        };
+    private:
+        Symbol f_symbol;
+        TradeId f_id{};
+        Price f_price{};
+        Quantity f_quantity{};
+        Timestamp f_timestamp{};
+        OrderId f_source_order{};
+        OrderId f_matched_order{};
+    };
 } // namespace core::protocol::trading
