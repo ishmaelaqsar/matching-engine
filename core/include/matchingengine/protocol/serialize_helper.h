@@ -8,7 +8,7 @@
 
 namespace core::protocol
 {
-    static void
+    [[maybe_unused]] static void
     serialize_string(const std::string& str, unsigned char* dst, size_t* offset)
     {
         if (str.length() > std::numeric_limits<StrLen>::max()) {
@@ -23,7 +23,7 @@ namespace core::protocol
         *offset += str.length();
     }
 
-    static std::string
+    [[maybe_unused]] static std::string
     deserialize_string(const unsigned char* src, size_t* offset)
     {
         StrLen length = 0;
@@ -38,7 +38,7 @@ namespace core::protocol
         return string;
     }
 
-    static void
+    [[maybe_unused]] static void
     serialize_uint64(const uint64_t& uint64, unsigned char* dst, size_t* offset)
     {
         const auto ui = htobe64(uint64);
@@ -46,7 +46,8 @@ namespace core::protocol
         *offset += sizeof(ui);
     }
 
-    static uint64_t deserialize_uint64(const unsigned char* src, size_t* offset)
+    [[maybe_unused]] static uint64_t
+    deserialize_uint64(const unsigned char* src, size_t* offset)
     {
         uint64_t ui;
         std::memcpy(&ui, src + *offset, sizeof(ui));
@@ -54,7 +55,7 @@ namespace core::protocol
         return be64toh(ui);
     }
 
-    static void
+    [[maybe_unused]] static void
     serialize_uint32(const uint32_t& uint32, unsigned char* dst, size_t* offset)
     {
         const auto ui = htobe32(uint32);
@@ -62,7 +63,8 @@ namespace core::protocol
         *offset += sizeof(ui);
     }
 
-    static uint32_t deserialize_uint32(const unsigned char* src, size_t* offset)
+    [[maybe_unused]] static uint32_t
+    deserialize_uint32(const unsigned char* src, size_t* offset)
     {
         uint32_t ui32;
         std::memcpy(&ui32, src + *offset, sizeof(ui32));
@@ -70,7 +72,7 @@ namespace core::protocol
         return be32toh(ui32);
     }
 
-    static void
+    [[maybe_unused]] static void
     serialize_uint16(const uint16_t& uint16, unsigned char* dst, size_t* offset)
     {
         const auto ui = htobe16(uint16);
@@ -78,7 +80,8 @@ namespace core::protocol
         *offset += sizeof(ui);
     }
 
-    static uint16_t deserialize_uint16(const unsigned char* src, size_t* offset)
+    [[maybe_unused]] static uint16_t
+    deserialize_uint16(const unsigned char* src, size_t* offset)
     {
         uint16_t ui16;
         std::memcpy(&ui16, src + *offset, sizeof(ui16));
@@ -86,14 +89,15 @@ namespace core::protocol
         return be16toh(ui16);
     }
 
-    static void
+    [[maybe_unused]] static void
     serialize_uint8(const uint8_t& uint8, unsigned char* dst, size_t* offset)
     {
         dst[*offset] = uint8;
         *offset += sizeof(uint8);
     }
 
-    static uint8_t deserialize_uint8(const unsigned char* src, size_t* offset)
+    [[maybe_unused]] static uint8_t
+    deserialize_uint8(const unsigned char* src, size_t* offset)
     {
         const auto ui = src[*offset];
         *offset += sizeof(ui);
@@ -101,7 +105,7 @@ namespace core::protocol
     }
 
     template <typename T>
-    static void
+    [[maybe_unused]] static void
     serialize_simple_struct(const T& t, unsigned char* dst, size_t* offset)
     {
         std::memcpy(dst + *offset, &t, sizeof(t));
@@ -109,7 +113,8 @@ namespace core::protocol
     }
 
     template <typename T>
-    static T deserialize_simple_struct(const unsigned char* src, size_t* offset)
+    [[maybe_unused]] static T
+    deserialize_simple_struct(const unsigned char* src, size_t* offset)
     {
         T t;
         std::memcpy(&t, src + *offset, sizeof(t));

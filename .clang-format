@@ -10,6 +10,7 @@ AllowShortBlocksOnASingleLine: Empty
 
 BreakBeforeBraces: Linux
 
+Cpp11BracedListStyle: true
 IndentCaseLabels: false
 ColumnLimit: 80
 AccessModifierOffset: -4
@@ -23,6 +24,7 @@ AlignAfterOpenBracket: BlockIndent
 SeparateDefinitionBlocks: Always
 NamespaceIndentation: All
 PointerAlignment: Left
+PenaltyBreakOpenParenthesis: 100
 
 SortIncludes: CaseSensitive
 SortUsingDeclarations: LexicographicNumeric

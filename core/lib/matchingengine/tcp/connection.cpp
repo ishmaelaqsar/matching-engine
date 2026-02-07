@@ -5,7 +5,6 @@
 #include <matchingengine/protocol/admin/login.h>
 #include <matchingengine/protocol/serialize_helper.h>
 #include <matchingengine/tcp/connection.h>
-#include <optional>
 
 namespace tcp
 {
@@ -96,9 +95,9 @@ namespace tcp
                         self->write(resp_header, resp_data);
 
                         if (success) {
-                            self->f_command_enqueue(
-                                InitCommand{self->f_id, self->f_username}
-                            );
+                            self->f_command_enqueue(InitCommand{
+                                self->f_id, self->f_username
+                            });
                             self->read_header();
                         } else {
                             self->error(std::move(error_msg));
@@ -159,12 +158,9 @@ namespace tcp
              )](const boost::system::error_code& ec, const size_t) -> void {
                 if (ec) {
                     BOOST_LOG_TRIVIAL(error) << "Read error: " << ec.message();
-                    self->f_command_enqueue(
-                        ErrorCommand{
-                            self->f_id,
-                            core::protocol::info::Error::server_error()
-                        }
-                    );
+                    self->f_command_enqueue(ErrorCommand{
+                        self->f_id, core::protocol::info::Error::server_error()
+                    });
                     self->f_command_enqueue(StopCommand{self->f_id});
                     return;
                 }
@@ -183,17 +179,14 @@ namespace tcp
         boost::asio::async_read(
             f_socket,
             boost::asio::buffer(f_payload_buffer.data(), header.length),
-            [self = shared_from_this(), header](
-                const boost::system::error_code& ec, const size_t
-            ) -> void {
+            [self = shared_from_this(),
+             header](const boost::system::error_code& ec, const size_t)
+                -> void {
                 if (ec) {
                     BOOST_LOG_TRIVIAL(error) << "Read error: " << ec.message();
-                    self->f_command_enqueue(
-                        ErrorCommand{
-                            self->f_id,
-                            core::protocol::info::Error::server_error()
-                        }
-                    );
+                    self->f_command_enqueue(ErrorCommand{
+                        self->f_id, core::protocol::info::Error::server_error()
+                    });
                     self->f_command_enqueue(StopCommand{self->f_id});
                     return;
                 }
@@ -223,19 +216,16 @@ namespace tcp
     void Connection::error(const boost::system::error_code& ec) const
     {
         BOOST_LOG_TRIVIAL(error) << "Read error: " << ec.message();
-        f_command_enqueue(
-            ErrorCommand{f_id, core::protocol::info::Error::server_error()}
-        );
+        f_command_enqueue(ErrorCommand{
+            f_id, core::protocol::info::Error::server_error()
+        });
     }
 
     void Connection::error(std::string&& message) const
     {
         BOOST_LOG_TRIVIAL(error) << "Client error: " << message;
-        f_command_enqueue(
-            ErrorCommand{
-                f_id,
-                core::protocol::info::Error::client_error(std::move(message))
-            }
-        );
+        f_command_enqueue(ErrorCommand{
+            f_id, core::protocol::info::Error::client_error(std::move(message))
+        });
     }
 } // namespace tcp

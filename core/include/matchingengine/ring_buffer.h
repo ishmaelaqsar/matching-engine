@@ -11,7 +11,7 @@ namespace core
     using RingBuffer = boost::lockfree::spsc_queue<
         T, boost::lockfree::capacity<RINGBUFFER_CAPACITY>>;
 
-    static constexpr auto MaxPayloadSize = (MAX_PAYLOAD_SIZE) -
+    static constexpr auto MaxPayloadSize = MAX_PAYLOAD_SIZE -
                                            sizeof(ConnectionId) -
                                            sizeof(protocol::Header::Size);
 

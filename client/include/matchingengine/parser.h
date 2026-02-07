@@ -14,8 +14,8 @@ using AnyRequest = std::variant<
     core::protocol::trading::ModifyOrderRequest,
     core::protocol::trading::CancelOrderRequest>;
 
-static auto get_book_request(const std::string_view line)
-    -> core::protocol::view::GetBookRequest
+static core::protocol::view::GetBookRequest
+get_book_request(const std::string_view line)
 {
     std::istringstream iss{std::string(line)};
     std::string symbol;
@@ -24,8 +24,8 @@ static auto get_book_request(const std::string_view line)
     return core::protocol::view::GetBookRequest(std::move(symbol));
 }
 
-static auto add_order_request(const std::string_view line)
-    -> core::protocol::trading::AddOrderRequest
+static core::protocol::trading::AddOrderRequest
+add_order_request(const std::string_view line)
 {
     std::istringstream iss{std::string(line)};
     std::string symbol;
@@ -51,8 +51,8 @@ static auto add_order_request(const std::string_view line)
     return {std::move(symbol), price, quantity, side};
 }
 
-static auto modify_order_request(const std::string_view line)
-    -> core::protocol::trading::ModifyOrderRequest
+static core::protocol::trading::ModifyOrderRequest
+modify_order_request(const std::string_view line)
 {
     std::istringstream iss{std::string(line)};
     std::string symbol;
@@ -65,8 +65,8 @@ static auto modify_order_request(const std::string_view line)
     return {std::move(symbol), order_id, quantity};
 }
 
-static auto cancel_order_request(const std::string_view line)
-    -> core::protocol::trading::CancelOrderRequest
+static core::protocol::trading::CancelOrderRequest
+cancel_order_request(const std::string_view line)
 {
     std::istringstream iss{std::string(line)};
     std::string symbol;
@@ -79,7 +79,7 @@ static auto cancel_order_request(const std::string_view line)
     return {std::move(symbol), order_id};
 }
 
-static auto parse_line(const std::string_view line) -> AnyRequest
+[[maybe_unused]] static AnyRequest parse_line(const std::string_view line)
 {
     std::istringstream iss{std::string(line)};
 

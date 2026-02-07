@@ -90,8 +90,8 @@ namespace tcp
 
         boost::asio::async_write(
             f_socket, boost::asio::buffer(*buffer),
-            [self = shared_from_this(
-             )](const boost::system::error_code& ec, const std::size_t bytes) {
+            [self = shared_from_this()](const boost::system::error_code& ec,
+                                        const std::size_t bytes) {
                 if (ec) {
                     BOOST_LOG_TRIVIAL(error)
                         << "async_write error: " << ec.message();
