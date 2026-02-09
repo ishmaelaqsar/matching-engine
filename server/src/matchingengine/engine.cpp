@@ -14,8 +14,8 @@ namespace orderbook
     static constexpr auto BatchSize = 500;
 
     Engine::Engine(
-        core::RingBuffer<core::Payload>* inbound_buffer,
-        core::RingBuffer<core::Payload>* outbound_buffer
+        core::RingBuffer<core::Payload>& inbound_buffer,
+        core::RingBuffer<core::Payload>& outbound_buffer
     )
         : f_inbound_buffer(inbound_buffer), f_outbound_buffer(outbound_buffer)
     {
@@ -26,7 +26,7 @@ namespace orderbook
         auto work_done = 0;
         for (auto i = 0; i < BatchSize; i++) {
             core::Payload inbound_payload{};
-            if (!f_inbound_buffer->pop(inbound_payload)) {
+            if (!f_inbound_buffer.pop(inbound_payload)) {
                 return work_done;
             }
 
@@ -95,7 +95,7 @@ namespace orderbook
             payload.connection_id,
             core::protocol::view::GetBookResponse(request.symbol(), bids, asks)
         );
-        if (!f_outbound_buffer->push(outbound_payload)) {
+        if (!f_outbound_buffer.push(outbound_payload)) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Outbound buffer is full, dropping message";
         }
@@ -124,7 +124,7 @@ namespace orderbook
                 request.side(), timestamp
             )
         );
-        if (!f_outbound_buffer->push(outbound_payload)) {
+        if (!f_outbound_buffer.push(outbound_payload)) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Outbound buffer is full, dropping message";
         }
@@ -138,7 +138,7 @@ namespace orderbook
                     trade.matched_order()
                 )
             );
-            if (!f_outbound_buffer->push(outbound_payload)) {
+            if (!f_outbound_buffer.push(outbound_payload)) {
                 BOOST_LOG_TRIVIAL(warning)
                     << "Outbound buffer is full, dropping message";
             }
@@ -167,7 +167,7 @@ namespace orderbook
                                        request.quantity(), success
                                    )
         );
-        if (!f_outbound_buffer->push(outbound_payload)) {
+        if (!f_outbound_buffer.push(outbound_payload)) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Outbound buffer is full, dropping message";
         }
@@ -191,7 +191,7 @@ namespace orderbook
                 request.symbol(), request.order_id(), success
             )
         );
-        if (!f_outbound_buffer->push(outbound_payload)) {
+        if (!f_outbound_buffer.push(outbound_payload)) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Outbound buffer is full, dropping message";
         }

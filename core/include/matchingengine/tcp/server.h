@@ -14,15 +14,15 @@ namespace tcp
     {
     public:
         Server(
-            core::RingBuffer<core::Payload>* inbound_buffer,
-            core::RingBuffer<core::Payload>* outbound_buffer,
+            core::RingBuffer<core::Payload>& inbound_buffer,
+            core::RingBuffer<core::Payload>& outbound_buffer,
             boost::asio::io_context& io_context
         );
 
         Server(
             const unsigned short& port,
-            core::RingBuffer<core::Payload>* inbound_buffer,
-            core::RingBuffer<core::Payload>* outbound_buffer,
+            core::RingBuffer<core::Payload>& inbound_buffer,
+            core::RingBuffer<core::Payload>& outbound_buffer,
             boost::asio::io_context& io_context
         );
 
@@ -57,7 +57,7 @@ namespace tcp
             f_connections_by_id{};
 
         boost::circular_buffer<Command> f_command_queue{MaxCommands};
-        core::RingBuffer<core::Payload>* f_inbound_buffer;
-        core::RingBuffer<core::Payload>* f_outbound_buffer;
+        core::RingBuffer<core::Payload>& f_inbound_buffer;
+        core::RingBuffer<core::Payload>& f_outbound_buffer;
     };
 } // namespace tcp

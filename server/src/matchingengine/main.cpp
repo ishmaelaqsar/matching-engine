@@ -24,17 +24,16 @@ void init_logging()
 int main()
 {
     init_logging();
-    auto inbound = std::make_unique<core::RingBuffer<core::Payload>>();
-    auto outbound = std::make_unique<core::RingBuffer<core::Payload>>();
+    core::RingBuffer<core::Payload> inbound;
+    core::RingBuffer<core::Payload> outbound;
     try {
         boost::asio::io_context io_context;
-        const auto server = std::make_shared<tcp::Server>(
-            inbound.get(), outbound.get(), io_context
-        );
+        const auto server =
+            std::make_shared<tcp::Server>(inbound, outbound, io_context);
         server->start();
 
         std::thread engine_thread([&]() -> void {
-            auto engine = orderbook::Engine(inbound.get(), outbound.get());
+            auto engine = orderbook::Engine(inbound, outbound);
             while (server->is_running()) {
                 try {
                     if (!engine.do_work()) {

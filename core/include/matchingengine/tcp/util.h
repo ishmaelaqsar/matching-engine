@@ -3,6 +3,7 @@
 #include <boost/lockfree/queue.hpp>
 #include <matchingengine/protocol/info/error.h>
 #include <matchingengine/protocol/info/info.h>
+#include <matchingengine/types.h>
 #include <variant>
 
 namespace tcp

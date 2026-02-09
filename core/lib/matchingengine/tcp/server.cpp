@@ -7,8 +7,8 @@ namespace tcp
     static constexpr size_t BatchSize = 1024;
 
     Server::Server(
-        core::RingBuffer<core::Payload>* inbound_buffer,
-        core::RingBuffer<core::Payload>* outbound_buffer,
+        core::RingBuffer<core::Payload>& inbound_buffer,
+        core::RingBuffer<core::Payload>& outbound_buffer,
         boost::asio::io_context& io_context
     )
         : Server(DefaultPort, inbound_buffer, outbound_buffer, io_context)
@@ -17,8 +17,8 @@ namespace tcp
 
     Server::Server(
         const unsigned short& port,
-        core::RingBuffer<core::Payload>* inbound_buffer,
-        core::RingBuffer<core::Payload>* outbound_buffer,
+        core::RingBuffer<core::Payload>& inbound_buffer,
+        core::RingBuffer<core::Payload>& outbound_buffer,
         boost::asio::io_context& io_context
     )
         : f_acceptor(
@@ -80,7 +80,7 @@ namespace tcp
                     };
                     auto request_enqueue =
                         [self](const core::Payload& payload) -> void {
-                        if (!self->f_inbound_buffer->push(payload)) {
+                        if (!self->f_inbound_buffer.push(payload)) {
                             BOOST_LOG_TRIVIAL(error) << "Inbound queue full, "
                                                         "dropping message.";
                         }
@@ -166,7 +166,7 @@ namespace tcp
         }
 
         core::Payload payload{};
-        while (work_left-- && f_outbound_buffer->pop(payload)) {
+        while (work_left-- && f_outbound_buffer.pop(payload)) {
             send_message(payload.connection_id, payload.header, payload.data);
         }
     }

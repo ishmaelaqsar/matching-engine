@@ -11,8 +11,8 @@ namespace orderbook
     {
     public:
         Engine(
-            core::RingBuffer<core::Payload>* inbound_buffer,
-            core::RingBuffer<core::Payload>* outbound_buffer
+            core::RingBuffer<core::Payload>& inbound_buffer,
+            core::RingBuffer<core::Payload>& outbound_buffer
         );
 
         auto do_work() -> int;
@@ -39,8 +39,8 @@ namespace orderbook
         std::unordered_map<core::Symbol, std::unique_ptr<Book>> f_order_books{};
         std::unordered_map<std::string, std::vector<std::unique_ptr<Order>>>
             f_orders_by_user{};
-        core::RingBuffer<core::Payload>* f_inbound_buffer;
-        core::RingBuffer<core::Payload>* f_outbound_buffer;
+        core::RingBuffer<core::Payload>& f_inbound_buffer;
+        core::RingBuffer<core::Payload>& f_outbound_buffer;
     };
 
     template <typename Message>
