@@ -58,7 +58,7 @@ namespace orderbook
 
         template <typename Compare1, typename Compare2, typename PriceCheck>
         std::vector<Trade> match(
-            std::unique_ptr<Order> order,
+            std::unique_ptr<Order>&& order,
             std::map<core::Price, std::unique_ptr<Level>, Compare1>& levels,
             std::map<core::Price, std::unique_ptr<Level>, Compare2>&
                 opposite_levels,
@@ -77,7 +77,7 @@ namespace orderbook
 
     template <typename Compare1, typename Compare2, typename PriceCheck>
     std::vector<Trade> Book::match(
-        std::unique_ptr<Order> order,
+        std::unique_ptr<Order>&& order,
         std::map<core::Price, std::unique_ptr<Level>, Compare1>& levels,
         std::map<core::Price, std::unique_ptr<Level>, Compare2>&
             opposite_levels,

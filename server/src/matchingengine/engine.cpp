@@ -73,11 +73,7 @@ namespace orderbook
 
     Book& Engine::get_book(const core::Symbol& symbol)
     {
-        auto& book = f_order_books[symbol];
-        if (!book) {
-            book = std::make_unique<Book>();
-        }
-        return *book;
+        return f_order_books[symbol];
     }
 
     void Engine::handle_get_book_request(const core::Payload& payload)

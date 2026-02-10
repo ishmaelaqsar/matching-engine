@@ -36,9 +36,7 @@ namespace orderbook
         );
         void handle_cancel_order_request(const core::Payload& payload);
 
-        std::unordered_map<core::Symbol, std::unique_ptr<Book>> f_order_books{};
-        std::unordered_map<std::string, std::vector<std::unique_ptr<Order>>>
-            f_orders_by_user{};
+        std::unordered_map<core::Symbol, Book> f_order_books{};
         core::RingBuffer<core::Payload>& f_inbound_buffer;
         core::RingBuffer<core::Payload>& f_outbound_buffer;
     };

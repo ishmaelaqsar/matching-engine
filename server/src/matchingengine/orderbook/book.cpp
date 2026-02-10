@@ -12,7 +12,7 @@ namespace orderbook
         auto order =
             std::make_unique<Order>(order_id, price, quantity, side, timestamp);
 
-        auto trades = order->side() == core::Side::Buy
+        auto trades = side == core::Side::Buy
                           ? match(std::move(order), f_bids, f_asks, buy_check)
                           : match(std::move(order), f_asks, f_bids, sell_check);
 
@@ -123,7 +123,8 @@ namespace orderbook
     {
         auto order =
             std::make_unique<Order>(order_id, price, quantity, side, timestamp);
-        return order->side() == core::Side::Buy
+
+        return side == core::Side::Buy
                    ? match(std::move(order), f_bids, f_asks, buy_check)
                    : match(std::move(order), f_asks, f_bids, sell_check);
     }
