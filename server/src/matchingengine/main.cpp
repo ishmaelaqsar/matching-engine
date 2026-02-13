@@ -4,6 +4,7 @@
 #include <boost/log/trivial.hpp>
 #include <matchingengine/engine.h>
 #include <matchingengine/tcp/server.h>
+#include <sqlite3.h>
 #include <thread>
 
 void init_logging()
@@ -24,8 +25,21 @@ void init_logging()
 int main()
 {
     init_logging();
+
+    sqlite3* db;
+
+    auto opened = sqlite3_open("matching_engine.db", &db);
+    if (opened) {
+        BOOST_LOG_TRIVIAL(error)
+            << "Error opening database: " << sqlite3_errmsg(db);
+        return 1;
+    }
+
+    BOOST_LOG_TRIVIAL(info) << "Database opened successfully";
+
     core::RingBuffer<core::Payload> inbound;
     core::RingBuffer<core::Payload> outbound;
+
     try {
         boost::asio::io_context io_context;
         const auto server =
@@ -33,7 +47,7 @@ int main()
         server->start();
 
         std::thread engine_thread([&]() -> void {
-            auto engine = orderbook::Engine(inbound, outbound);
+            auto engine = orderbook::Engine(db, inbound, outbound);
             while (server->is_running()) {
                 try {
                     if (!engine.do_work()) {
@@ -64,6 +78,8 @@ int main()
         BOOST_LOG_TRIVIAL(error) << "Main exception: unknown exception";
         return 1;
     }
+
+    sqlite3_close(db);
 
     return 0;
 }

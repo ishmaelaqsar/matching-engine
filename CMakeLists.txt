@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 project(matching_engine
-        VERSION 1.0.0
-        LANGUAGES CXX
+    VERSION 1.0.0
+    LANGUAGES CXX
 )
 
 # -------------------------------------------------------------
@@ -17,10 +17,10 @@ set(MAX_PAYLOAD_SIZE 256 CACHE STRING "Max payload size of the Ring Buffer betwe
 
 # -------------------------------------------------------------
 # Build type configuration
-if (NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif ()
+endif()
 
 # Output directories (set BEFORE add_executable/add_library)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -31,23 +31,29 @@ enable_testing()
 include(CTest)
 
 # Compiler warnings
-if (MSVC)
+if(MSVC)
     add_compile_options(/W4 /permissive-)
-else ()
+else()
     add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
-endif ()
+endif()
+
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
 
 # -------------------------------------------------------------
 # Dependencies
 find_package(Boost REQUIRED COMPONENTS log log_setup system thread)
+find_package(SQLite3 REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 include(FetchContent)
 
 # GoogleTest dependency
 FetchContent_Declare(
-        googletest
-        URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP OFF
 )
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE) # for MSVC
@@ -64,10 +70,10 @@ add_subdirectory(client)
 # -------------------------------------------------------------
 # Installation rules
 install(
-        TARGETS matching_engine_core matching_engine_gui matching_engine_server
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
+    TARGETS matching_engine_core matching_engine_gui matching_engine_server
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
 )
 
 # Install public headers

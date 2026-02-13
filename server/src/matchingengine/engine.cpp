@@ -14,10 +14,11 @@ namespace orderbook
     static constexpr auto BatchSize = 500;
 
     Engine::Engine(
-        core::RingBuffer<core::Payload>& inbound_buffer,
+        sqlite3* db, core::RingBuffer<core::Payload>& inbound_buffer,
         core::RingBuffer<core::Payload>& outbound_buffer
     )
-        : f_inbound_buffer(inbound_buffer), f_outbound_buffer(outbound_buffer)
+        : f_db(db), f_inbound_buffer(inbound_buffer),
+          f_outbound_buffer(outbound_buffer)
     {
     }
 

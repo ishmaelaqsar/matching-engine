@@ -3,6 +3,7 @@
 #include <matchingengine/orderbook/book.h>
 #include <matchingengine/ring_buffer.h>
 #include <matchingengine/types.h>
+#include <sqlite3.h>
 #include <unordered_map>
 
 namespace orderbook
@@ -11,7 +12,7 @@ namespace orderbook
     {
     public:
         Engine(
-            core::RingBuffer<core::Payload>& inbound_buffer,
+            sqlite3* db, core::RingBuffer<core::Payload>& inbound_buffer,
             core::RingBuffer<core::Payload>& outbound_buffer
         );
 
@@ -37,6 +38,7 @@ namespace orderbook
         void handle_cancel_order_request(const core::Payload& payload);
 
         std::unordered_map<core::Symbol, Book> f_order_books{};
+        sqlite3* f_db;
         core::RingBuffer<core::Payload>& f_inbound_buffer;
         core::RingBuffer<core::Payload>& f_outbound_buffer;
     };
